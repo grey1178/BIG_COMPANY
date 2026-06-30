@@ -414,23 +414,40 @@ function getInitials(n) { return String(n).slice(0,1).toUpperCase(); }
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
 // ── FIREBASE LISTENERS ──
+// 렌더링 디바운서 — 50ms 안에 여러 번 호출돼도 한 번만 실행
+let _renderTimer = null;
+function scheduleRender() {
+  if (_renderTimer) clearTimeout(_renderTimer);
+  _renderTimer = setTimeout(() => {
+    _renderTimer = null;
+    const active = document.querySelector('.view.active')?.id?.replace('view-','');
+    if (active === 'schedule' || !active) renderCalendar();
+    else if (active === 'results') renderResults();
+    else if (active === 'notice') renderNotices();
+    else if (active === 'members') renderMembers();
+  }, 50);
+}
+
+let _loadedCount = 0;
 function initFirebase() {
   // members
   onValue(ref(db, 'members'), snap => {
     const val = snap.val() || {};
     state.members = Object.entries(val).map(([id, m]) => ({ id, ...m }));
-    reRenderAll();
+    checkLoaded();
+    scheduleRender();
   }, err => { console.error(err); setSyncStatus('error'); });
 
   // votes
   onValue(ref(db, 'votes'), snap => {
     const val = snap.val() || {};
-    // convert {date: {memberId: true}} → {date: [id, ...]}
     state.votes = {};
     Object.entries(val).forEach(([date, members]) => {
-      state.votes[date] = Object.keys(members);
+      if (members && typeof members === 'object')
+        state.votes[date] = Object.keys(members);
     });
-    reRenderAll();
+    checkLoaded();
+    scheduleRender();
   }, err => { console.error(err); setSyncStatus('error'); });
 
   // notices
@@ -439,25 +456,17 @@ function initFirebase() {
     state.notices = Object.entries(val)
       .map(([id, n]) => ({ id, ...n }))
       .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-    reRenderAll();
-    setSyncStatus('synced');
+    checkLoaded();
+    scheduleRender();
   }, err => { console.error(err); setSyncStatus('error'); });
-
-  // hide loading after first data arrives
-  setTimeout(() => {
-    document.getElementById('loading-overlay').classList.add('hidden');
-    setSyncStatus('synced');
-  }, 1500);
 }
 
-function reRenderAll() {
-  const active = document.querySelector('.view.active')?.id?.replace('view-','');
-  if (active === 'schedule') renderCalendar();
-  else if (active === 'results') renderResults();
-  else if (active === 'notice') renderNotices();
-  else if (active === 'members') renderMembers();
-  // always re-render calendar data even when on other views
-  renderCalendar();
+function checkLoaded() {
+  _loadedCount++;
+  if (_loadedCount >= 3) {
+    document.getElementById('loading-overlay').classList.add('hidden');
+    setSyncStatus('synced');
+  }
 }
 
 // ── VIEWS ──
@@ -475,17 +484,18 @@ window.showView = function(v) {
 };
 
 // ── MEMBERS ──
-window.addMember = async function() {
+window.addMember = function() {
   if (state.members.length >= 8) { showToast('멤버는 최대 8명까지 추가할 수 있어요'); return; }
   const input = document.getElementById('new-member-name');
   const name = input.value.trim(); if (!name) return;
   const usedColors = new Set(state.members.map(m=>m.color));
   const color = COLORS8.find(c=>!usedColors.has(c)) || COLORS8[state.members.length%8];
   const id = generateId();
-  setSyncStatus('syncing');
-  await set(ref(db, `members/${id}`), { name, role:'', color, instrument:'', photoUrl:'', createdAt: Date.now() });
   input.value = '';
   showToast(`${name} 추가됨`);
+  // fire-and-forget — onValue listener will update UI
+  set(ref(db, `members/${id}`), { name, role:'', color, instrument:'', photoUrl:'', createdAt: Date.now() })
+    .catch(e => { console.error(e); showToast('저장 오류'); });
 };
 
 window.removeMember = async function(id) {
@@ -503,25 +513,28 @@ window.removeMember = async function(id) {
   if (Object.keys(updates).length) await update(ref(db), updates);
 };
 
-window.setMemberColor = async function(id, color) {
-  setSyncStatus('syncing');
-  await update(ref(db, `members/${id}`), { color });
+window.setMemberColor = function(id, color) {
+  // optimistic: update local state immediately
+  const m = state.members.find(m=>m.id===id); if(m) m.color = color;
+  renderMembers();
+  update(ref(db, `members/${id}`), { color }).catch(e => console.error(e));
 };
 
 window.updateRoleLocal = function(id, val) {
   const m = state.members.find(m=>m.id===id); if(m) m.role = val;
 };
 
-window.saveRole = async function(id, val) {
-  setSyncStatus('syncing');
-  await update(ref(db, `members/${id}`), { role: val });
+window.saveRole = function(id, val) {
+  update(ref(db, `members/${id}`), { role: val }).catch(e => console.error(e));
 };
 
-window.setInstrument = async function(id, instr) {
+window.setInstrument = function(id, instr) {
   const m = state.members.find(m=>m.id===id); if(!m) return;
   const newVal = m.instrument === instr ? '' : instr;
-  setSyncStatus('syncing');
-  await update(ref(db, `members/${id}`), { instrument: newVal });
+  // optimistic update
+  m.instrument = newVal;
+  renderMembers();
+  update(ref(db, `members/${id}`), { instrument: newVal }).catch(e => console.error(e));
 };
 
 window.startEditName = function(id) {
@@ -533,10 +546,11 @@ window.startEditName = function(id) {
   document.getElementById('ne-'+id)?.focus();
 };
 
-window.finishEditName = async function(id, val) {
+window.finishEditName = function(id, val) {
   if (val.trim()) {
-    setSyncStatus('syncing');
-    await update(ref(db, `members/${id}`), { name: val.trim() });
+    const m = state.members.find(m=>m.id===id);
+    if (m) m.name = val.trim();
+    update(ref(db, `members/${id}`), { name: val.trim() }).catch(e => console.error(e));
   }
   renderMembers();
 };
@@ -776,18 +790,29 @@ window.toggleVote = function(id, row) {
   }
 };
 
-window.saveVote = async function() {
+window.saveVote = function() {
   if(!state.modalDate) return;
-  setSyncStatus('syncing');
+  const dateKey = state.modalDate;
+  // optimistic: update local state immediately, close modal right away
   if(state.modalVotes.size){
-    // save as {memberId: true} object
-    const obj={};
-    state.modalVotes.forEach(id=>{obj[id]=true;});
-    await set(ref(db,`votes/${state.modalDate}`), obj);
+    state.votes[dateKey] = Array.from(state.modalVotes);
   } else {
-    await remove(ref(db,`votes/${state.modalDate}`));
+    delete state.votes[dateKey];
   }
-  showToast('저장됨'); closeModal();
+  showToast('저장됨');
+  closeModal();          // 즉시 닫기 — Firebase 응답 안 기다림
+  renderCalendar();      // 로컬 상태로 즉시 달력 업데이트
+  // background sync to Firebase
+  if(state.modalVotes.size || state.votes[dateKey]){
+    const obj={};
+    (state.votes[dateKey]||[]).forEach(id=>{obj[id]=true;});
+    if(Object.keys(obj).length)
+      set(ref(db,`votes/${dateKey}`), obj).catch(e=>console.error(e));
+    else
+      remove(ref(db,`votes/${dateKey}`)).catch(e=>console.error(e));
+  } else {
+    remove(ref(db,`votes/${dateKey}`)).catch(e=>console.error(e));
+  }
 };
 
 window.closeModal = function() {
@@ -865,7 +890,7 @@ function clearNoticeForm() {
   document.querySelector('input[name="notice-type"][value="notice"]').checked=true;
   document.getElementById('song-extra').style.display='none';
 }
-window.saveNotice = async function() {
+window.saveNotice = function() {
   const title=document.getElementById('notice-title-input').value.trim();
   if(!title){showToast('제목을 입력해주세요');return;}
   const type=document.querySelector('input[name="notice-type"]:checked')?.value||'notice';
@@ -874,16 +899,20 @@ window.saveNotice = async function() {
   const artist=document.getElementById('notice-artist-input').value.trim();
   const key=document.getElementById('notice-key-input').value.trim();
   const bpm=document.getElementById('notice-bpm-input').value.trim();
-  setSyncStatus('syncing');
   if(state.editingNoticeId){
-    await update(ref(db,`notices/${state.editingNoticeId}`),{title,body,type,pinned,artist,key,bpm,updatedAt:Date.now()});
+    const n=state.notices.find(n=>n.id===state.editingNoticeId);
+    if(n) Object.assign(n,{title,body,type,pinned,artist,key,bpm,updatedAt:Date.now()});
+    update(ref(db,`notices/${state.editingNoticeId}`),{title,body,type,pinned,artist,key,bpm,updatedAt:Date.now()}).catch(e=>console.error(e));
     showToast('수정됐어요');
   } else {
     const id=generateId();
-    await set(ref(db,`notices/${id}`),{type,title,body,pinned,artist,key,bpm,createdAt:Date.now()});
+    const newNotice={id,type,title,body,pinned,artist,key,bpm,createdAt:Date.now()};
+    state.notices.unshift(newNotice);
+    set(ref(db,`notices/${id}`),{type,title,body,pinned,artist,key,bpm,createdAt:Date.now()}).catch(e=>console.error(e));
     showToast('추가됐어요');
   }
   cancelNoticeForm();
+  renderNotices();
 };
 window.editNotice = function(id) {
   const n=state.notices.find(n=>n.id===id);if(!n)return;
@@ -902,15 +931,17 @@ window.editNotice = function(id) {
   document.getElementById('notice-form-toggle-btn').textContent='✕ 닫기';
   document.getElementById('notice-form').scrollIntoView({behavior:'smooth',block:'start'});
 };
-window.deleteNotice = async function(id) {
+window.deleteNotice = function(id) {
   if(!confirm('삭제할까요?'))return;
-  setSyncStatus('syncing');
-  await remove(ref(db,`notices/${id}`));
+  state.notices = state.notices.filter(n=>n.id!==id);
+  renderNotices();
+  remove(ref(db,`notices/${id}`)).catch(e=>console.error(e));
 };
-window.togglePin = async function(id) {
+window.togglePin = function(id) {
   const n=state.notices.find(n=>n.id===id);if(!n)return;
-  setSyncStatus('syncing');
-  await update(ref(db,`notices/${id}`),{pinned:!n.pinned});
+  n.pinned=!n.pinned;
+  renderNotices();
+  update(ref(db,`notices/${id}`),{pinned:n.pinned}).catch(e=>console.error(e));
 };
 function renderNotices() {
   const list=document.getElementById('notice-list');
@@ -954,8 +985,8 @@ function renderNotices() {
 }
 
 // ── START ──
+renderCalendar(); // 로딩 전에 빈 달력 먼저 그리기
 initFirebase();
-renderCalendar();
 
 </script>
 </body>
