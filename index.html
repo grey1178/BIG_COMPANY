@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>차세대 밴드 스케줄러</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- 폰트: 비차단 방식 로드 (네트워크 느려도 앱은 즉시 열림) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
 <style>
 :root {
   --navy: #0D1B2A;
@@ -24,7 +25,7 @@
   --green-light: #eaf7ef;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Noto Sans KR', sans-serif; background: var(--off-white); color: var(--text-primary); min-height: 100vh; font-size: 15px; }
+body { font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: var(--off-white); color: var(--text-primary); min-height: 100vh; font-size: 15px; }
 
 /* ── HEADER ── */
 .site-header {
@@ -33,7 +34,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--off-white); co
   position: sticky; top: 0; z-index: 100; gap: 12px;
 }
 .logo {
-  font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 18px; font-weight: 700;
   color: #fff; letter-spacing: -0.5px; display: flex; align-items: center; gap: 9px; white-space: nowrap;
 }
 .logo-dot { width: 9px; height: 9px; background: var(--amber); border-radius: 50%; animation: pulse 2s infinite; flex-shrink: 0; }
