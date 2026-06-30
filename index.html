@@ -206,12 +206,7 @@ textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.65; }
 .vote-info-pill { font-size: 12px; color: var(--text-muted); }
 .info-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--amber-light); color: var(--amber-dark); border: 1px solid #f0d08a; border-radius: var(--radius); padding: 8px 14px; font-size: 14px; margin-bottom: 16px; }
 
-/* ── LOADING OVERLAY ── */
-.loading-overlay { position: fixed; inset: 0; background: var(--navy); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 16px; transition: opacity .4s; }
-.loading-overlay.hidden { opacity: 0; pointer-events: none; display: none; }
-.loading-spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,.2); border-top-color: var(--amber); border-radius: 50%; animation: spin .8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { color: rgba(255,255,255,.7); font-size: 15px; }
+/* 로딩 오버레이 제거됨 */
 
 /* toast */
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--navy); color: #fff; padding: 12px 22px; border-radius: var(--radius); font-size: 14px; opacity: 0; transition: all .25s; z-index: 9999; pointer-events: none; white-space: nowrap; }
@@ -220,17 +215,13 @@ textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.65; }
 </head>
 <body>
 
-<!-- 로딩 -->
-<div class="loading-overlay" id="loading-overlay">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">Firebase 연결 중...</div>
-</div>
+<!-- 로딩 오버레이 제거: 앱 즉시 열림, Firebase는 백그라운드 연결 -->
 
 <header class="site-header">
   <div class="logo"><span class="logo-dot"></span>차세대 밴드 스케줄러</div>
   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
     <div class="sync-dot" id="sync-dot"></div>
-    <span class="sync-label" id="sync-label">연결 중</span>
+    <span class="sync-label" id="sync-label">동기화 중</span>
   </div>
   <nav class="nav-tabs">
     <button class="tab-btn active" onclick="showView('schedule')">📅 투표</button>
@@ -428,24 +419,14 @@ function scheduleRender() {
   }, 50);
 }
 
-// 각 리스너가 처음 한 번만 로딩 완료로 처리
-const _loaded = { members: false, votes: false, notices: false };
-function markLoaded(key) {
-  _loaded[key] = true;
-  if (_loaded.members && _loaded.votes && _loaded.notices) {
-    document.getElementById('loading-overlay').classList.add('hidden');
-    setSyncStatus('synced');
-  }
-}
-
 function initFirebase() {
   // members
   onValue(ref(db, 'members'), snap => {
     const val = snap.val() || {};
     state.members = Object.entries(val).map(([id, m]) => ({ id, ...m }));
-    markLoaded('members');
+    setSyncStatus('synced');
     scheduleRender();
-  }, err => { console.error(err); setSyncStatus('error'); markLoaded('members'); });
+  }, err => { console.error('members err:', err); setSyncStatus('error'); });
 
   // votes
   onValue(ref(db, 'votes'), snap => {
@@ -455,9 +436,8 @@ function initFirebase() {
       if (members && typeof members === 'object')
         state.votes[date] = Object.keys(members);
     });
-    markLoaded('votes');
     scheduleRender();
-  }, err => { console.error(err); setSyncStatus('error'); markLoaded('votes'); });
+  }, err => { console.error('votes err:', err); setSyncStatus('error'); });
 
   // notices
   onValue(ref(db, 'notices'), snap => {
@@ -465,15 +445,8 @@ function initFirebase() {
     state.notices = Object.entries(val)
       .map(([id, n]) => ({ id, ...n }))
       .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-    markLoaded('notices');
     scheduleRender();
-  }, err => { console.error(err); setSyncStatus('error'); markLoaded('notices'); });
-
-  // 최대 5초 후 강제로 로딩 해제 (네트워크 문제 대비)
-  setTimeout(() => {
-    document.getElementById('loading-overlay').classList.add('hidden');
-    setSyncStatus('synced');
-  }, 5000);
+  }, err => { console.error('notices err:', err); setSyncStatus('error'); });
 }
 
 // ── VIEWS ──
@@ -992,7 +965,8 @@ function renderNotices() {
 }
 
 // ── START ──
-renderCalendar(); // 로딩 전에 빈 달력 먼저 그리기
+// 앱 즉시 렌더링 후 Firebase 백그라운드 연결
+renderCalendar();
 initFirebase();
 
 </script>
