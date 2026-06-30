@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밴드 합주 스케줄러</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0D1B2A;
+    --amber: #F5A623;
+    --amber-light: #FFF4DC;
+    --amber-dark: #B8741A;
+    --off-white: #F7F5F0;
+    --surface: #FFFFFF;
+    --border: #E8E4DC;
+    --text-primary: #1A1A1A;
+    --text-secondary: #6B6B6B;
+    --text-muted: #9B9B9B;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--off-white);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .site-header {
+    background: var(--navy);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    background: var(--amber);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .tab-btn {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.7);
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn.active, .tab-btn:hover {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: var(--navy);
+    font-weight: 700;
+  }
+
+  /* LAYOUT */
+  .main { max-width: 900px; margin: 0 auto; padding: 28px 16px 60px; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .section-sub {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  /* MEMBERS VIEW */
+  .member-add-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .member-add-row input {
+    flex: 1;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .member-add-row input:focus { border-color: var(--amber); }
+  .btn-primary {
+    background: var(--amber);
+    color: var(--navy);
+    border: none;
+    padding: 11px 20px;
+    border-radius: var(--radius);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background: var(--amber-dark); color: #fff; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { border-color: #ccc; color: var(--text-primary); }
+  .btn-danger {
+    background: transparent;
+    border: 1px solid #fcc;
+    color: #c0392b;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-danger:hover { background: #fef0f0; }
+
+  .members-list { display: flex; flex-direction: column; gap: 10px; }
+  .member-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.15s;
+  }
+  .member-item:hover { border-color: #ccc; }
+  .member-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .member-info { flex: 1; }
+  .member-name { font-weight: 500; font-size: 15px; }
+  .member-role {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .member-role-input {
+    border: none;
+    background: transparent;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: text;
+    width: 100px;
+    outline: none;
+    border-bottom: 1px dashed transparent;
+    transition: border-color 0.15s;
+  }
+  .member-role-input:focus { border-bottom-color: var(--amber); }
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* COLOR SWATCHES */
+  .color-swatches { display: flex; gap: 6px; }
+  .color-swatch {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.12s;
+  }
+  .color-swatch:hover { transform: scale(1.2); }
+  .color-swatch.selected { border-color: var(--navy); }
+
+  /* SCHEDULE VIEW */
+  .schedule-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .schedule-controls input[type="date"],
+  .schedule-controls select {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    background: var(--surface);
+    outline: none;
+    cursor: pointer;
+  }
+  .schedule-controls input[type="date"]:focus,
+  .schedule-controls select:focus { border-color: var(--amber); }
+
+  /* CALENDAR GRID */
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .cal-nav {
+    background: transparent;
+    border: 1px solid var(--border);
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+  .cal-nav:hover { border-color: var(--amber); background: var(--amber-light); }
+  .cal-month {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .cal-day-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 6px 0;
+    letter-spacing: 0.5px;
+  }
+  .cal-day-label:first-child { color: #e74c3c; }
+  .cal-day-label:last-child { color: #3498db; }
+  .cal-cell {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 5px 3px 3px;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+    position: relative;
+    overflow: hidden;
+    min-height: 60px;
+  }
+  .cal-cell:hover { border-color: var(--amber); z-index: 1; }
+  .cal-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+  .cal-cell.today { border-color: var(--amber); }
+  .cal-cell.today .day-num { color: var(--amber-dark); font-weight: 700; }
+  .cal-cell.past { opacity: 0.45; }
+  .cal-cell.sunday .day-num { color: #e74c3c; }
+  .cal-cell.saturday .day-num { color: #3498db; }
+  .day-num { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 3px; z-index: 1; }
+  .vote-bars {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+  .vote-bar {
+    height: 4px;
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .vote-count-badge {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .cal-cell.all-available {
+    background: #f0faf5;
+    border-color: #27ae60;
+  }
+  .cal-cell.all-available .day-num { color: #1e7e34; }
+
+  /* VOTE MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,27,42,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .modal-date {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+  }
+  .vote-member-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .vote-member-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .vote-member-row.voted {
+    border-width: 2px;
+    background: var(--amber-light);
+  }
+  .vote-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .vote-member-row.voted .vote-check {
+    border-color: var(--amber);
+    background: var(--amber);
+    color: #fff;
+  }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-actions .btn-ghost { flex: 1; text-align: center; }
+  .modal-actions .btn-primary { flex: 1; text-align: center; }
+
+  /* RESULTS VIEW */
+  .results-list { display: flex; flex-direction: column; gap: 10px; }
+  .result-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .result-item.top {
+    border-color: #27ae60;
+    border-width: 2px;
+    background: #f0faf5;
+  }
+  .result-rank {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 36px;
+    text-align: center;
+  }
+  .result-item.top .result-rank { color: #27ae60; }
+  .result-date-info { flex: 1; }
+  .result-date-str { font-weight: 700; font-size: 15px; }
+  .result-who { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .result-bar-wrap { width: 120px; }
+  .result-bar-track {
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 3px;
+  }
+  .result-bar-fill { height: 100%; border-radius: 4px; background: var(--amber); transition: width 0.4s; }
+  .result-item.top .result-bar-fill { background: #27ae60; }
+  .result-pct { font-size: 12px; color: var(--text-secondary); text-align: right; }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* SHARE SECTION */
+  .share-box {
+    background: var(--navy);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .share-box input {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+  }
+  .share-copy-btn {
+    background: var(--amber);
+    color: var(--navy);
+    border: none;
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .share-copy-btn:hover { background: #e09000; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.25s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* INFO BADGE */
+  .info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--amber-light);
+    color: var(--amber-dark);
+    border: 1px solid #f0d08a;
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">
+    <span class="logo-dot"></span>
+    밴드 스케줄러
+  </div>
+  <div class="header-actions">
+    <button class="tab-btn active" onclick="showView('members')">멤버</button>
+    <button class="tab-btn" onclick="showView('schedule')">투표</button>
+    <button class="tab-btn" onclick="showView('results')">결과</button>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- MEMBERS VIEW -->
+  <div id="view-members" class="view active">
+    <div class="section-title">밴드 멤버</div>
+    <div class="section-sub">멤버를 추가하고 색상을 지정하세요</div>
+
+    <div class="card">
+      <div class="member-add-row">
+        <input type="text" id="new-member-name" placeholder="멤버 이름 입력" maxlength="20" onkeydown="if(event.key==='Enter')addMember()">
+        <button class="btn-primary" onclick="addMember()">추가</button>
+      </div>
+      <div id="members-list" class="members-list"></div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE VIEW -->
+  <div id="view-schedule" class="view">
+    <div class="section-title">합주 날짜 투표</div>
+    <div class="section-sub">달력에서 날짜를 클릭해 가능 여부를 표시하세요</div>
+
+    <div id="schedule-member-warning" class="info-badge" style="display:none">
+      ⚠️ 먼저 멤버를 추가해주세요
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <div class="cal-header">
+        <button class="cal-nav" onclick="changeMonth(-1)">←</button>
+        <div class="cal-month" id="cal-month-label"></div>
+        <button class="cal-nav" onclick="changeMonth(1)">→</button>
+      </div>
+
+      <div id="legend-container" class="legend"></div>
+
+      <div class="cal-grid" id="cal-grid">
+        <div class="cal-day-label">일</div>
+        <div class="cal-day-label">월</div>
+        <div class="cal-day-label">화</div>
+        <div class="cal-day-label">수</div>
+        <div class="cal-day-label">목</div>
+        <div class="cal-day-label">금</div>
+        <div class="cal-day-label">토</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:600; font-size:15px; margin-bottom:12px; color:var(--navy)">빠른 전체 투표</div>
+      <div id="quick-vote-member-list" style="display:flex; gap:8px; flex-wrap:wrap"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS VIEW -->
+  <div id="view-results" class="view">
+    <div class="section-title">투표 결과</div>
+    <div class="section-sub">가능 인원이 많은 날짜 순으로 표시됩니다</div>
+
+    <div class="share-box">
+      <input type="text" id="share-url" readonly value="">
+      <button class="share-copy-btn" onclick="copyShare()">링크 복사</button>
+    </div>
+
+    <div id="results-list" class="results-list"></div>
+    <div id="results-empty" class="empty-state" style="display:none">
+      <div class="empty-icon">📅</div>
+      <div>아직 투표 데이터가 없어요</div>
+      <div style="margin-top:6px; font-size:12px;">투표 탭에서 날짜를 선택해보세요</div>
+    </div>
+  </div>
+</main>
+
+<!-- VOTE MODAL -->
+<div class="modal-overlay" id="vote-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">날짜 선택</div>
+    <div class="modal-date" id="modal-date"></div>
+    <div id="vote-member-list" class="vote-member-list"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">취소</button>
+      <button class="btn-primary" onclick="saveVote()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MEMBER_COLORS = [
+  '#E74C3C','#E67E22','#F1C40F','#2ECC71','#1ABC9C',
+  '#3498DB','#9B59B6','#E91E63','#FF5722','#00BCD4'
+];
+const COLOR_NAMES = ['빨강','주황','노랑','초록','민트','파랑','보라','핑크','다홍','하늘'];
+
+let state = {
+  members: [],       // {id, name, role, color}
+  votes: {},         // { 'YYYY-MM-DD': [memberId, ...] }
+  currentYear: new Date().getFullYear(),
+  currentMonth: new Date().getMonth(),
+  modalDate: null,
+  modalVotes: new Set(),
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('band-scheduler-v2');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.members = parsed.members || [];
+      state.votes = parsed.votes || {};
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem('band-scheduler-v2', JSON.stringify({
+    members: state.members,
+    votes: state.votes,
+  }));
+  updateShareUrl();
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+}
+
+// ===== VIEWS =====
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  const idx = ['members','schedule','results'].indexOf(v);
+  if(idx >= 0) btns[idx].classList.add('active');
+
+  if(v === 'schedule') renderCalendar();
+  if(v === 'results') renderResults();
+}
+
+// ===== MEMBERS =====
+function addMember() {
+  const input = document.getElementById('new-member-name');
+  const name = input.value.trim();
+  if (!name) return;
+  const usedColors = new Set(state.members.map(m => m.color));
+  const color = MEMBER_COLORS.find(c => !usedColors.has(c)) || MEMBER_COLORS[state.members.length % MEMBER_COLORS.length];
+  state.members.push({ id: generateId(), name, role: '', color });
+  input.value = '';
+  saveState();
+  renderMembers();
+  showToast(`${name} 추가됨`);
+}
+
+function removeMember(id) {
+  state.members = state.members.filter(m => m.id !== id);
+  Object.keys(state.votes).forEach(date => {
+    state.votes[date] = state.votes[date].filter(mid => mid !== id);
+  });
+  saveState();
+  renderMembers();
+}
+
+function setMemberColor(id, color) {
+  const m = state.members.find(m => m.id === id);
+  if (m) { m.color = color; saveState(); renderMembers(); }
+}
+
+function updateRole(id, val) {
+  const m = state.members.find(m => m.id === id);
+  if (m) { m.role = val; saveState(); }
+}
+
+function getInitials(name) {
+  return name.slice(0,1).toUpperCase();
+}
+
+function hexToRgba(hex, a) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function renderMembers() {
+  const list = document.getElementById('members-list');
+  if (!state.members.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🎸</div><div>아직 멤버가 없어요</div><div style="margin-top:6px;font-size:12px">이름을 입력하고 추가 버튼을 눌러보세요</div></div>`;
+    return;
+  }
+  list.innerHTML = state.members.map((m,i) => {
+    const swatches = MEMBER_COLORS.map((c,ci) =>
+      `<div class="color-swatch ${c===m.color?'selected':''}" style="background:${c}" title="${COLOR_NAMES[ci]}" onclick="setMemberColor('${m.id}','${c}')"></div>`
+    ).join('');
+    return `
+    <div class="member-item">
+      <div class="member-avatar" style="background:${hexToRgba(m.color,0.15)};color:${m.color}">${getInitials(m.name)}</div>
+      <div class="member-info">
+        <div class="member-name">${escHtml(m.name)}</div>
+        <input class="member-role-input" placeholder="역할 (예: 기타, 드럼...)" value="${escHtml(m.role)}" oninput="updateRole('${m.id}',this.value)" onblur="saveState()">
+      </div>
+      <div class="color-swatches">${swatches}</div>
+      <button class="btn-danger" onclick="removeMember('${m.id}')">삭제</button>
+    </div>`;
+  }).join('');
+}
+
+// ===== CALENDAR =====
+function changeMonth(dir) {
+  state.currentMonth += dir;
+  if (state.currentMonth < 0) { state.currentMonth = 11; state.currentYear--; }
+  if (state.currentMonth > 11) { state.currentMonth = 0; state.currentYear++; }
+  renderCalendar();
+}
+
+function dateKey(y, m, d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function renderCalendar() {
+  const warning = document.getElementById('schedule-member-warning');
+  if (!state.members.length) { warning.style.display = 'flex'; } else { warning.style.display = 'none'; }
+
+  const y = state.currentYear, m = state.currentMonth;
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('cal-month-label').textContent = `${y}년 ${months[m]}`;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const today = new Date();
+  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const grid = document.getElementById('cal-grid');
+  const dayLabels = grid.querySelectorAll('.cal-day-label');
+  grid.innerHTML = '';
+  dayLabels.forEach(l => grid.appendChild(l));
+
+  // empty cells
+  for (let i = 0; i < firstDay; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell empty';
+    grid.appendChild(cell);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = dateKey(y, m, d);
+    const dayOfWeek = (firstDay + d - 1) % 7;
+    const votes = state.votes[key] || [];
+    const total = state.members.length;
+    const isPast = key < todayKey;
+    const isToday = key === todayKey;
+    const allAvailable = total > 0 && votes.length === total;
+
+    let cls = 'cal-cell';
+    if (isToday) cls += ' today';
+    if (isPast) cls += ' past';
+    if (dayOfWeek === 0) cls += ' sunday';
+    if (dayOfWeek === 6) cls += ' saturday';
+    if (allAvailable) cls += ' all-available';
+
+    const cell = document.createElement('div');
+    cell.className = cls;
+    cell.onclick = () => openModal(key);
+
+    const num = document.createElement('div');
+    num.className = 'day-num';
+    num.textContent = d;
+    cell.appendChild(num);
+
+    if (votes.length && state.members.length) {
+      const bars = document.createElement('div');
+      bars.className = 'vote-bars';
+      votes.forEach(mid => {
+        const mem = state.members.find(m => m.id === mid);
+        if (!mem) return;
+        const bar = document.createElement('div');
+        bar.className = 'vote-bar';
+        bar.style.background = mem.color;
+        bar.style.width = '100%';
+        bars.appendChild(bar);
+      });
+      cell.appendChild(bars);
+
+      const badge = document.createElement('div');
+      badge.className = 'vote-count-badge';
+      badge.textContent = `${votes.length}/${total}`;
+      cell.appendChild(badge);
+    }
+
+    grid.appendChild(cell);
+  }
+
+  // Legend
+  const legend = document.getElementById('legend-container');
+  if (state.members.length) {
+    legend.innerHTML = state.members.map(m =>
+      `<div class="legend-item"><div class="legend-dot" style="background:${m.color}"></div>${escHtml(m.name)}</div>`
+    ).join('') + `<div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div>전원 가능</div>`;
+  } else {
+    legend.innerHTML = '';
+  }
+
+  renderQuickVote();
+}
+
+function renderQuickVote() {
+  const container = document.getElementById('quick-vote-member-list');
+  if (!state.members.length) {
+    container.innerHTML = '<span style="font-size:13px;color:var(--text-muted)">멤버를 추가하면 빠른 투표가 가능해요</span>';
+    return;
+  }
+  container.innerHTML = state.members.map(m => {
+    const voteCount = Object.values(state.votes).filter(v => v.includes(m.id)).length;
+    return `<button class="btn-ghost" style="border-color:${m.color};color:${m.color}" onclick="openMemberVoteSheet('${m.id}')">
+      ${escHtml(m.name)} <span style="font-size:11px;opacity:0.7">${voteCount}일</span>
+    </button>`;
+  }).join('');
+}
+
+// ===== MODAL =====
+function openModal(key) {
+  if (!state.members.length) { showToast('먼저 멤버를 추가해주세요'); return; }
+  state.modalDate = key;
+  state.modalVotes = new Set(state.votes[key] || []);
+
+  const [y, mo, d] = key.split('-');
+  const date = new Date(parseInt(y), parseInt(mo)-1, parseInt(d));
+  const days = ['일','월','화','수','목','금','토'];
+  document.getElementById('modal-title').textContent = `${parseInt(mo)}월 ${parseInt(d)}일 (${days[date.getDay()]})`;
+  document.getElementById('modal-date').textContent = '참여 가능한 멤버를 선택하세요';
+
+  const list = document.getElementById('vote-member-list');
+  list.innerHTML = state.members.map(m => {
+    const checked = state.modalVotes.has(m.id);
+    return `<div class="vote-member-row ${checked?'voted':''}" onclick="toggleVote('${m.id}',this)" style="${checked?`border-color:${m.color};`:''}">
+      <div class="vote-check" style="${checked?`background:${m.color};border-color:${m.color}`:''}">✓</div>
+      <div class="member-avatar" style="width:32px;height:32px;font-size:13px;background:${hexToRgba(m.color,0.15)};color:${m.color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${getInitials(m.name)}</div>
+      <div>
+        <div style="font-weight:500;font-size:14px">${escHtml(m.name)}</div>
+        ${m.role ? `<div style="font-size:11px;color:var(--text-muted)">${escHtml(m.role)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('vote-modal').classList.add('open');
+}
+
+function toggleVote(id, row) {
+  if (state.modalVotes.has(id)) {
+    state.modalVotes.delete(id);
+    row.classList.remove('voted');
+    row.style.borderColor = '';
+    row.style.borderWidth = '';
+    const chk = row.querySelector('.vote-check');
+    chk.style.background = '';
+    chk.style.borderColor = '';
+  } else {
+    state.modalVotes.add(id);
+    const mem = state.members.find(m => m.id === id);
+    row.classList.add('voted');
+    row.style.borderColor = mem ? mem.color : '';
+    row.style.borderWidth = '2px';
+    const chk = row.querySelector('.vote-check');
+    if (mem) { chk.style.background = mem.color; chk.style.borderColor = mem.color; }
+  }
+}
+
+function saveVote() {
+  if (state.modalDate) {
+    if (state.modalVotes.size) {
+      state.votes[state.modalDate] = Array.from(state.modalVotes);
+    } else {
+      delete state.votes[state.modalDate];
+    }
+    saveState();
+    renderCalendar();
+    showToast('저장됨');
+  }
+  closeModal();
+}
+
+function closeModal() {
+  document.getElementById('vote-modal').classList.remove('open');
+  state.modalDate = null;
+}
+
+document.getElementById('vote-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ===== MEMBER VOTE SHEET =====
+function openMemberVoteSheet(memberId) {
+  showToast('달력에서 날짜를 클릭해 투표하세요');
+}
+
+// ===== RESULTS =====
+function renderResults() {
+  updateShareUrl();
+  const list = document.getElementById('results-list');
+  const empty = document.getElementById('results-empty');
+  const total = state.members.length;
+
+  const entries = Object.entries(state.votes)
+    .filter(([,v]) => v.length > 0)
+    .sort((a,b) => {
+      if (b[1].length !== a[1].length) return b[1].length - a[1].length;
+      return a[0] < b[0] ? -1 : 1;
+    });
+
+  if (!entries.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const days = ['일','월','화','수','목','금','토'];
+
+  list.innerHTML = entries.slice(0, 20).map(([key, votes], i) => {
+    const [y, mo, d] = key.split('-');
+    const date = new Date(parseInt(y), parseInt(mo)-1, parseInt(d));
+    const dayStr = `${parseInt(y)}년 ${parseInt(mo)}월 ${parseInt(d)}일 (${days[date.getDay()]})`;
+    const pct = total ? Math.round(votes.length / total * 100) : 0;
+    const isTop = votes.length === total && total > 0;
+    const names = votes.map(id => state.members.find(m => m.id === id)?.name || '').filter(Boolean).join(', ');
+    const avatars = votes.map(id => {
+      const mem = state.members.find(m => m.id === id);
+      if (!mem) return '';
+      return `<div style="width:22px;height:22px;border-radius:50%;background:${hexToRgba(mem.color,0.2)};color:${mem.color};font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:2px">${getInitials(mem.name)}</div>`;
+    }).join('');
+
+    return `<div class="result-item ${isTop?'top':''}">
+      <div class="result-rank">${i+1}</div>
+      <div class="result-date-info">
+        <div class="result-date-str">${dayStr}${isTop?' 🎵':''}</div>
+        <div class="result-who" style="display:flex;align-items:center;gap:4px;margin-top:5px">${avatars}<span style="margin-left:4px">${names}</span></div>
+      </div>
+      <div class="result-bar-wrap">
+        <div class="result-bar-track"><div class="result-bar-fill" style="width:${pct}%"></div></div>
+        <div class="result-pct">${votes.length}/${total}명 (${pct}%)</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== SHARE =====
+function updateShareUrl() {
+  const data = {
+    m: state.members.map(m => ({ i: m.id, n: m.name, r: m.role, c: m.color })),
+    v: state.votes,
+  };
+  try {
+    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+    const url = `${location.origin}${location.pathname}?d=${encoded}`;
+    const el = document.getElementById('share-url');
+    if (el) el.value = url;
+  } catch(e) {}
+}
+
+function copyShare() {
+  const url = document.getElementById('share-url').value;
+  navigator.clipboard.writeText(url).then(() => showToast('링크가 복사됐어요!')).catch(() => {
+    document.getElementById('share-url').select();
+    document.execCommand('copy');
+    showToast('링크가 복사됐어요!');
+  });
+}
+
+function loadFromUrl() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const d = params.get('d');
+    if (!d) return false;
+    const data = JSON.parse(decodeURIComponent(atob(d)));
+    if (data.m) state.members = data.m.map(m => ({ id: m.i, name: m.n, role: m.r || '', color: m.c }));
+    if (data.v) state.votes = data.v;
+    saveState();
+    return true;
+  } catch(e) { return false; }
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== INIT =====
+loadState();
+if (loadFromUrl()) {
+  showToast('공유 링크로 데이터를 불러왔어요');
+}
+renderMembers();
+</script>
+</body>
+</html>
