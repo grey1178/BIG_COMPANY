@@ -435,7 +435,10 @@ const INSTRUMENTS = [
   { id:'bass',     icon:'🎸', label:'베이스' },
   { id:'drum',     icon:'🥁', label:'드럼' },
   { id:'guitar',   icon:'🎵', label:'기타' },
+  { id:'manager',  icon:'📋', label:'매니저', noVote:true },
 ];
+// 투표에 포함되는 멤버만 필터링
+function voteMembers() { return state.members.filter(m => m.instrument !== 'manager'); }
 
 let state = {
   members: [],
@@ -656,8 +659,10 @@ function renderCalendar() {
     const key = dateKey(y,m,d);
     const dow = (firstDay+d-1)%7;
     const votes = state.votes[key] || [];
-    const total = state.members.length;
-    const allAvail = total > 0 && votes.length === total;
+    const total = voteMembers().length;
+    const votable = voteMembers().map(m=>m.id);
+    const voteCount = votes.filter(id=>votable.includes(id)).length;
+    const allAvail = total > 0 && voteCount === total;
     const isToday = key===todayKey;
     const isPast = key<todayKey;
 
@@ -679,7 +684,7 @@ function renderCalendar() {
     if (state.members.length > 0) {
       const pieWrap = document.createElement('div');
       pieWrap.className = 'pie-wrap';
-      pieWrap.innerHTML = buildPieSvg(votes, state.members);
+      pieWrap.innerHTML = buildPieSvg(votes, voteMembers());
       cell.appendChild(pieWrap);
     }
     grid.appendChild(cell);
@@ -720,7 +725,7 @@ function renderQuickVote() {
 
 // ── MODAL ──
 function openModal(key) {
-  if (!state.members.length) { showToast('먼저 멤버를 추가해주세요'); return; }
+  if (!voteMembers().length) { showToast('투표 가능한 멤버를 먼저 추가해주세요'); return; }
   state.modalDate = key;
   state.modalVotes = new Set(state.votes[key] || []);
   const [y,mo,d] = key.split('-');
@@ -728,7 +733,7 @@ function openModal(key) {
   const days=['일','월','화','수','목','금','토'];
   document.getElementById('modal-title').textContent = `${parseInt(mo)}월 ${parseInt(d)}일 (${days[date.getDay()]})`;
   const list = document.getElementById('vote-member-list');
-  list.innerHTML = state.members.map(m => {
+  list.innerHTML = voteMembers().map(m => {
     const checked = state.modalVotes.has(m.id);
     const instr = INSTRUMENTS.find(i=>i.id===m.instrument);
     return `<div class="vote-member-row ${checked?'voted':''}" onclick="toggleVote('${m.id}',this)"
@@ -778,7 +783,7 @@ function renderResults() {
 
   const list = document.getElementById('results-list');
   const empty = document.getElementById('results-empty');
-  const total = state.members.length;
+  const total = voteMembers().length;
   const todayStr = dateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   const entries = Object.entries(state.votes)
     .filter(([date,v])=> v.length>0 && date >= todayStr)
@@ -790,8 +795,10 @@ function renderResults() {
     const [y,mo,d]=key.split('-');
     const date=new Date(parseInt(y),parseInt(mo)-1,parseInt(d));
     const dayStr=`${parseInt(y)}년 ${parseInt(mo)}월 ${parseInt(d)}일 (${days[date.getDay()]})`;
-    const pct=total?Math.round(votes.length/total*100):0;
-    const isTop=votes.length===total&&total>0;
+    const votableIds = voteMembers().map(m=>m.id);
+    const vCnt = votes.filter(id=>votableIds.includes(id)).length;
+    const pct=total?Math.round(vCnt/total*100):0;
+    const isTop = vCnt===total && total>0;
     const avatars=votes.map(id=>{
       const mem=state.members.find(m=>m.id===id); if(!mem)return'';
       const inner=mem.photoUrl?`<img src="${mem.photoUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`:
@@ -800,14 +807,14 @@ function renderResults() {
     }).join('');
     const names=votes.map(id=>state.members.find(m=>m.id===id)?.name||'').filter(Boolean).join(', ');
     return `<div class="result-item ${isTop?'top':''}">
-      <div class="result-rank">${votes.length===total&&total>0?'🎵':i+1}</div>
+      <div class="result-rank">${isTop?'🎵':i+1}</div>
       <div class="result-date-info">
         <div class="result-date-str">${dayStr}${isTop?' 🎵':''}</div>
         <div class="result-who">${avatars}<span style="margin-left:4px">${names}</span></div>
       </div>
       <div class="result-bar-wrap">
         <div class="result-bar-track"><div class="result-bar-fill" style="width:${pct}%"></div></div>
-        <div class="result-pct">${votes.length}/${total}명 (${pct}%)</div>
+        <div class="result-pct">${vCnt}/${total}명 (${pct}%)</div>
       </div>
     </div>`;
   }).join('');
