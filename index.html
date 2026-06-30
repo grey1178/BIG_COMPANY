@@ -365,42 +365,62 @@ textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.65; }
 
 <div class="toast" id="toast"></div>
 
-<!-- sync indicator (우상단) -->
+<!-- sync badge -->
 <style>
-.sync-badge { position:fixed; bottom:60px; right:16px; display:flex; align-items:center; gap:5px; background:rgba(13,27,42,.75); color:rgba(255,255,255,.7); font-size:11px; padding:5px 10px; border-radius:20px; z-index:500; pointer-events:none; transition:opacity .3s; }
-.sync-badge.hidden { opacity:0; }
-.sync-dot2 { width:7px; height:7px; border-radius:50%; background:#aaa; flex-shrink:0; }
-.sync-dot2.ok { background:#2ecc71; }
-.sync-dot2.err { background:#e74c3c; }
+.sync-badge{position:fixed;bottom:60px;right:16px;display:flex;align-items:center;gap:5px;background:rgba(13,27,42,.8);color:rgba(255,255,255,.8);font-size:11px;padding:5px 11px;border-radius:20px;z-index:500;pointer-events:none;transition:opacity .4s;}
+.sync-badge.hidden{opacity:0;}
+.sync-dot2{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sync-dot2.ok{background:#2ecc71;}
+.sync-dot2.err{background:#e74c3c;}
 </style>
 <div class="sync-badge hidden" id="sync-badge"><div class="sync-dot2" id="sync-dot2"></div><span id="sync-lbl"></span></div>
 
-<!-- Firebase 번들 (로컬) -->
-<script src="firebase_bundle.js"></script>
 <script>
-// ── Firebase 초기화 ──
-const { initializeApp } = FirebaseBundle;
-const { getDatabase, ref, onValue, set } = FirebaseBundle;
-const _fbApp = initializeApp({
-  apiKey: "AIzaSyCwMiqObIY-OQThmDaB9cp189sntKNJA4",
-  authDomain: "band-schedule-39011.firebaseapp.com",
-  databaseURL: "https://band-schedule-39011-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "band-schedule-39011",
-  storageBucket: "band-schedule-39011.firebasestorage.app",
-  messagingSenderId: "988097357820",
-  appId: "1:988097357820:web:f63244d49c355a9a77f479"
-});
-const _db = getDatabase(_fbApp);
-let _fbReady = false;
+// ── Firebase REST API (SDK 없음, fetch만 사용) ──
+const _FB_URL = 'https://band-schedule-39011-default-rtdb.asia-southeast1.firebasedatabase.app/app.json';
+let _pollTimer = null;
+let _lastSaved = '';
+
 function _showSync(msg, ok) {
-  const b=document.getElementById('sync-badge');
-  const d=document.getElementById('sync-dot2');
-  const l=document.getElementById('sync-lbl');
-  d.className='sync-dot2 '+(ok?'ok':'err');
-  l.textContent=msg; b.classList.remove('hidden');
-  clearTimeout(_showSync._t);
-  _showSync._t=setTimeout(()=>b.classList.add('hidden'),3000);
+  const b=document.getElementById('sync-badge'), d=document.getElementById('sync-dot2'), l=document.getElementById('sync-lbl');
+  d.className='sync-dot2 '+(ok?'ok':'err'); l.textContent=msg; b.classList.remove('hidden');
+  clearTimeout(_showSync._t); _showSync._t=setTimeout(()=>b.classList.add('hidden'),3000);
 }
+
+// Firebase에 저장 (PUT)
+async function _fbSave(data) {
+  try {
+    const res = await fetch(_FB_URL, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    if (res.ok) _showSync('동기화 완료', true);
+    else _showSync('저장 오류', false);
+  } catch(e) { _showSync('오프라인', false); }
+}
+
+// Firebase에서 읽기 (GET) — 변경 있으면 화면 갱신
+async function _fbPoll() {
+  try {
+    const res = await fetch(_FB_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || data.members === undefined) return;
+    const incoming = JSON.stringify(data);
+    if (incoming === _lastSaved) return; // 변경 없으면 무시
+    _lastSaved = incoming;
+    // 로컬보다 Firebase가 최신이면 덮어씀
+    state.members = data.members||[];
+    state.votes   = data.votes||{};
+    state.notices = data.notices||[];
+    localStorage.setItem('band-v4', incoming);
+    renderMembers(); renderCalendar();
+    const active = document.querySelector('.view.active')?.id?.replace('view-','');
+    if(active==='results') renderResults();
+    if(active==='notice') renderNotices();
+    _showSync('동기화됨', true);
+  } catch(e) {/* 오프라인이면 조용히 무시 */}
+}
+
+// 3초마다 폴링으로 다른 브라우저 변경 감지
+function _startPolling() { _pollTimer = setInterval(_fbPoll, 3000); }
 </script>
 <script>
 // ── 8 DISTINCT COLORS ──
@@ -426,42 +446,26 @@ let state = {
   pendingPhotoMemberId: null,
 };
 
-// ── PERSIST (localStorage + Firebase 백그라운드 동기화) ──
+// ── PERSIST (localStorage 즉시 + Firebase REST 백그라운드) ──
 function loadState() {
-  // 1) localStorage에서 즉시 로드 (항상 동작)
+  // localStorage에서 즉시 로드
   try {
     const s = localStorage.getItem('band-v4');
-    if (s) { const p = JSON.parse(s); state.members=p.members||[]; state.votes=p.votes||{}; state.notices=p.notices||[]; }
+    if (s) { const p = JSON.parse(s); state.members=p.members||[]; state.votes=p.votes||{}; state.notices=p.notices||[]; _lastSaved=s; }
   } catch(e) {}
-  // 2) Firebase에서 최신 데이터 가져오기 (있으면 덮어씀)
-  try {
-    onValue(ref(_db,'app'), snap => {
-      const v = snap.val();
-      if (!v) return; // Firebase 비어있으면 무시
-      const fb = typeof v === 'string' ? JSON.parse(v) : v;
-      if (fb && fb.members !== undefined) {
-        state.members = fb.members||[];
-        state.votes   = fb.votes||{};
-        state.notices = fb.notices||[];
-        // localStorage도 갱신
-        localStorage.setItem('band-v4', JSON.stringify({members:state.members,votes:state.votes,notices:state.notices}));
-        renderMembers(); renderCalendar();
-        const active = document.querySelector('.view.active')?.id?.replace('view-','');
-        if(active==='results') renderResults();
-        if(active==='notice') renderNotices();
-        _showSync('실시간 동기화됨', true);
-      }
-    }, err => { console.warn('Firebase sync error:', err); });
-  } catch(e) { console.warn('Firebase init error:', e); }
+  // Firebase에서 한번 읽어서 최신 데이터로 갱신
+  _fbPoll();
+  // 이후 3초마다 폴링 시작
+  _startPolling();
 }
 function saveState() {
-  // 1) localStorage에 즉시 저장
   const data = {members:state.members, votes:state.votes, notices:state.notices};
-  localStorage.setItem('band-v4', JSON.stringify(data));
-  // 2) Firebase에 백그라운드 저장 (실패해도 앱 동작에 영향 없음)
-  try {
-    set(ref(_db,'app'), JSON.stringify(data)).catch(e => console.warn('Firebase save error:', e));
-  } catch(e) { console.warn('Firebase save error:', e); }
+  const json = JSON.stringify(data);
+  // localStorage 즉시 저장
+  localStorage.setItem('band-v4', json);
+  _lastSaved = json;
+  // Firebase REST PUT 백그라운드 저장
+  _fbSave(data);
 }
 function generateId() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -911,6 +915,7 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 loadState();
 renderMembers();
 renderCalendar();
+
 </script>
 </body>
 </html>
