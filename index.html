@@ -208,7 +208,7 @@ textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.65; }
 
 /* ── LOADING OVERLAY ── */
 .loading-overlay { position: fixed; inset: 0; background: var(--navy); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 16px; transition: opacity .4s; }
-.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.loading-overlay.hidden { opacity: 0; pointer-events: none; display: none; }
 .loading-spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,.2); border-top-color: var(--amber); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { color: rgba(255,255,255,.7); font-size: 15px; }
@@ -428,15 +428,24 @@ function scheduleRender() {
   }, 50);
 }
 
-let _loadedCount = 0;
+// 각 리스너가 처음 한 번만 로딩 완료로 처리
+const _loaded = { members: false, votes: false, notices: false };
+function markLoaded(key) {
+  _loaded[key] = true;
+  if (_loaded.members && _loaded.votes && _loaded.notices) {
+    document.getElementById('loading-overlay').classList.add('hidden');
+    setSyncStatus('synced');
+  }
+}
+
 function initFirebase() {
   // members
   onValue(ref(db, 'members'), snap => {
     const val = snap.val() || {};
     state.members = Object.entries(val).map(([id, m]) => ({ id, ...m }));
-    checkLoaded();
+    markLoaded('members');
     scheduleRender();
-  }, err => { console.error(err); setSyncStatus('error'); });
+  }, err => { console.error(err); setSyncStatus('error'); markLoaded('members'); });
 
   // votes
   onValue(ref(db, 'votes'), snap => {
@@ -446,9 +455,9 @@ function initFirebase() {
       if (members && typeof members === 'object')
         state.votes[date] = Object.keys(members);
     });
-    checkLoaded();
+    markLoaded('votes');
     scheduleRender();
-  }, err => { console.error(err); setSyncStatus('error'); });
+  }, err => { console.error(err); setSyncStatus('error'); markLoaded('votes'); });
 
   // notices
   onValue(ref(db, 'notices'), snap => {
@@ -456,17 +465,15 @@ function initFirebase() {
     state.notices = Object.entries(val)
       .map(([id, n]) => ({ id, ...n }))
       .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-    checkLoaded();
+    markLoaded('notices');
     scheduleRender();
-  }, err => { console.error(err); setSyncStatus('error'); });
-}
+  }, err => { console.error(err); setSyncStatus('error'); markLoaded('notices'); });
 
-function checkLoaded() {
-  _loadedCount++;
-  if (_loadedCount >= 3) {
+  // 최대 5초 후 강제로 로딩 해제 (네트워크 문제 대비)
+  setTimeout(() => {
     document.getElementById('loading-overlay').classList.add('hidden');
     setSyncStatus('synced');
-  }
+  }, 5000);
 }
 
 // ── VIEWS ──
