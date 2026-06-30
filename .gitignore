@@ -1,0 +1,5 @@
+node_modules/
+bundle_firebase.mjs
+firebase_entry.mjs
+package-lock.json
+package.json

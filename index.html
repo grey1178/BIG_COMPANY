@@ -346,11 +346,11 @@ textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.65; }
 <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
 <div class="toast" id="toast"></div>
 
-<!-- ══ Firebase SDK ══ -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, remove, push, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+<!-- ══ Firebase SDK (로컬 번들) ══ -->
+<script src="firebase_bundle.js"></script>
+<script>
+const { initializeApp } = FirebaseBundle;
+const { getDatabase, ref, onValue, set, update, remove, push, serverTimestamp } = FirebaseBundle;
 
 // ── Firebase 설정 ──
 const firebaseConfig = {
