@@ -472,26 +472,33 @@ window.addMember = function() {
   const usedColors = new Set(state.members.map(m=>m.color));
   const color = COLORS8.find(c=>!usedColors.has(c)) || COLORS8[state.members.length%8];
   const id = generateId();
+  const newMember = { id, name, role:'', color, instrument:'', photoUrl:'', createdAt: Date.now() };
   input.value = '';
+  // ★ 낙관적 업데이트: 로컬 state에 즉시 추가 후 바로 렌더링
+  state.members.push(newMember);
+  renderMembers();
   showToast(`${name} 추가됨`);
-  // fire-and-forget — onValue listener will update UI
-  set(ref(db, `members/${id}`), { name, role:'', color, instrument:'', photoUrl:'', createdAt: Date.now() })
+  // 백그라운드로 Firebase에 저장 (실패해도 UI는 이미 업데이트됨)
+  set(ref(db, `members/${id}`), { name, role:'', color, instrument:'', photoUrl:'', createdAt: newMember.createdAt })
     .catch(e => { console.error(e); showToast('저장 오류'); });
 };
 
-window.removeMember = async function(id) {
+window.removeMember = function(id) {
   const m = state.members.find(m=>m.id===id);
   if (!confirm(`'${m?.name}' 멤버를 삭제할까요?`)) return;
-  setSyncStatus('syncing');
-  await remove(ref(db, `members/${id}`));
-  // remove from all votes
-  const vSnap = await new Promise(res => onValue(ref(db,'votes'), res, {onlyOnce:true}));
-  const votes = vSnap.val() || {};
-  const updates = {};
-  Object.entries(votes).forEach(([date, members]) => {
-    if (members[id]) updates[`votes/${date}/${id}`] = null;
+  // ★ 낙관적 업데이트: 로컬 state에서 즉시 제거
+  state.members = state.members.filter(mb=>mb.id!==id);
+  Object.keys(state.votes).forEach(date => {
+    state.votes[date] = state.votes[date].filter(vid => vid !== id);
+    if (!state.votes[date].length) delete state.votes[date];
   });
-  if (Object.keys(updates).length) await update(ref(db), updates);
+  renderMembers();
+  showToast('멤버 삭제됨');
+  // 백그라운드 Firebase 삭제
+  remove(ref(db, `members/${id}`)).catch(e => console.error(e));
+  const updates = {};
+  Object.keys(state.votes).forEach(date => { updates[`votes/${date}/${id}`] = null; });
+  if (Object.keys(updates).length) update(ref(db), updates).catch(e => console.error(e));
 };
 
 window.setMemberColor = function(id, color) {
