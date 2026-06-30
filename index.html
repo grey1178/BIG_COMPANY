@@ -398,6 +398,9 @@ async function _fbSave(data) {
 
 // Firebase에서 읽기 (GET) — 변경 있으면 화면 갱신
 async function _fbPoll() {
+  // 사용자가 input/textarea에 입력 중이면 덮어쓰지 않음
+  const focused = document.activeElement;
+  if (focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA')) return;
   try {
     const res = await fetch(_FB_URL);
     if (!res.ok) return;
