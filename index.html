@@ -3,610 +3,355 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>밴드 합주 스케줄러</title>
+<title>차세대 밴드 스케줄러</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --navy: #0D1B2A;
-    --amber: #F5A623;
-    --amber-light: #FFF4DC;
-    --amber-dark: #B8741A;
-    --off-white: #F7F5F0;
-    --surface: #FFFFFF;
-    --border: #E8E4DC;
-    --text-primary: #1A1A1A;
-    --text-secondary: #6B6B6B;
-    --text-muted: #9B9B9B;
-    --radius: 10px;
-    --radius-lg: 16px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: var(--off-white);
-    color: var(--text-primary);
-    min-height: 100vh;
-  }
+:root {
+  --navy: #0D1B2A;
+  --amber: #F5A623;
+  --amber-light: #FFF4DC;
+  --amber-dark: #B8741A;
+  --off-white: #F4F2ED;
+  --surface: #FFFFFF;
+  --border: #E2DDD4;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #999999;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --green: #1e9e55;
+  --green-light: #eaf7ef;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--off-white); color: var(--text-primary); min-height: 100vh; font-size: 15px; }
 
-  /* HEADER */
-  .site-header {
-    background: var(--navy);
-    padding: 20px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .logo {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .logo-dot {
-    width: 10px; height: 10px;
-    background: var(--amber);
-    border-radius: 50%;
-    display: inline-block;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.85); }
-  }
-  .header-actions { display: flex; gap: 10px; align-items: center; }
-  .tab-btn {
-    background: transparent;
-    border: 1.5px solid rgba(255,255,255,0.25);
-    color: rgba(255,255,255,0.7);
-    padding: 7px 16px;
-    border-radius: var(--radius);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .tab-btn.active, .tab-btn:hover {
-    background: var(--amber);
-    border-color: var(--amber);
-    color: var(--navy);
-    font-weight: 700;
-  }
+/* ── HEADER ── */
+.site-header {
+  background: var(--navy); padding: 14px 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo {
+  font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700;
+  color: #fff; letter-spacing: -0.5px; display: flex; align-items: center; gap: 9px; white-space: nowrap;
+}
+.logo-dot { width: 9px; height: 9px; background: var(--amber); border-radius: 50%; animation: pulse 2s infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
+.nav-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+.tab-btn {
+  background: transparent; border: 1.5px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.65); padding: 7px 15px; border-radius: var(--radius);
+  font-family: 'Noto Sans KR', sans-serif; font-size: 13px; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.tab-btn.active, .tab-btn:hover { background: var(--amber); border-color: var(--amber); color: var(--navy); font-weight: 700; }
 
-  /* LAYOUT */
-  .main { max-width: 900px; margin: 0 auto; padding: 28px 16px 60px; }
+/* ── LAYOUT ── */
+.main { max-width: 960px; margin: 0 auto; padding: 26px 18px 70px; }
+.view { display: none; }
+.view.active { display: block; }
+.section-title { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--navy); letter-spacing: -.5px; margin-bottom: 5px; }
+.section-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 22px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 16px; }
 
-  /* VIEWS */
-  .view { display: none; }
-  .view.active { display: block; }
+/* ── BUTTONS ── */
+.btn-primary { background: var(--amber); color: var(--navy); border: none; padding: 11px 20px; border-radius: var(--radius); font-family: 'Noto Sans KR', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: background .15s; white-space: nowrap; }
+.btn-primary:hover { background: var(--amber-dark); color: #fff; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 9px 16px; border-radius: var(--radius); font-family: 'Noto Sans KR', sans-serif; font-size: 14px; cursor: pointer; transition: all .15s; }
+.btn-ghost:hover { border-color: #bbb; color: var(--text-primary); }
+.btn-danger { background: transparent; border: 1px solid #fcc; color: #c0392b; padding: 7px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-danger:hover { background: #fef0f0; }
 
-  /* SECTION TITLE */
-  .section-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--navy);
-    letter-spacing: -0.5px;
-    margin-bottom: 6px;
-  }
-  .section-sub {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 24px;
-  }
+/* ── FORM ── */
+.form-input { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'Noto Sans KR', sans-serif; font-size: 15px; background: var(--surface); outline: none; transition: border-color .15s; color: var(--text-primary); }
+.form-input:focus { border-color: var(--amber); }
+textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.65; }
+.form-label { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+.form-row { margin-bottom: 14px; }
+.form-row-inline { display: flex; gap: 12px; margin-bottom: 14px; }
+.form-row-inline > * { flex: 1; }
 
-  /* CARDS */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    margin-bottom: 16px;
-  }
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); font-size: 15px; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
 
-  /* MEMBERS VIEW */
-  .member-add-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .member-add-row input {
-    flex: 1;
-    padding: 11px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 14px;
-    background: var(--surface);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .member-add-row input:focus { border-color: var(--amber); }
-  .btn-primary {
-    background: var(--amber);
-    color: var(--navy);
-    border: none;
-    padding: 11px 20px;
-    border-radius: var(--radius);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s;
-    white-space: nowrap;
-  }
-  .btn-primary:hover { background: var(--amber-dark); color: #fff; }
-  .btn-ghost {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    padding: 7px 14px;
-    border-radius: var(--radius);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-ghost:hover { border-color: #ccc; color: var(--text-primary); }
-  .btn-danger {
-    background: transparent;
-    border: 1px solid #fcc;
-    color: #c0392b;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-danger:hover { background: #fef0f0; }
+/* ── 8 DISTINCT MEMBER COLORS ── */
+.COLORS8 { } /* defined in JS */
 
-  .members-list { display: flex; flex-direction: column; gap: 10px; }
-  .member-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition: border-color 0.15s;
-  }
-  .member-item:hover { border-color: #ccc; }
-  .member-avatar {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700;
-    font-size: 15px;
-    flex-shrink: 0;
-  }
-  .member-info { flex: 1; }
-  .member-name { font-weight: 500; font-size: 15px; }
-  .member-role {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
-  .member-role-input {
-    border: none;
-    background: transparent;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 12px;
-    color: var(--text-secondary);
-    cursor: text;
-    width: 100px;
-    outline: none;
-    border-bottom: 1px dashed transparent;
-    transition: border-color 0.15s;
-  }
-  .member-role-input:focus { border-bottom-color: var(--amber); }
-  .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+/* ── CALENDAR ── */
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.cal-nav { background: transparent; border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 9px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all .12s; }
+.cal-nav:hover { border-color: var(--amber); background: var(--amber-light); }
+.cal-month { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+.cal-day-label { text-align: center; font-size: 12px; font-weight: 700; color: var(--text-muted); padding: 6px 0; }
+.cal-day-label:first-child { color: #e74c3c; }
+.cal-day-label:last-child { color: #3498db; }
 
-  /* COLOR SWATCHES */
-  .color-swatches { display: flex; gap: 6px; }
-  .color-swatch {
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: transform 0.12s;
-  }
-  .color-swatch:hover { transform: scale(1.2); }
-  .color-swatch.selected { border-color: var(--navy); }
+/* calendar cell */
+.cal-cell {
+  border-radius: 9px; border: 1px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column; align-items: center; padding: 6px 4px 5px;
+  cursor: pointer; transition: border-color .12s, box-shadow .12s;
+  position: relative; overflow: visible; aspect-ratio: 1; min-height: 62px;
+}
+.cal-cell:hover { border-color: var(--amber); box-shadow: 0 0 0 2px rgba(245,166,35,.18); z-index: 1; }
+.cal-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+.cal-cell.today { border-color: var(--amber); border-width: 2px; }
+.cal-cell.today .day-num { color: var(--amber-dark); font-weight: 700; }
+.cal-cell.past { opacity: .4; }
+.cal-cell.sunday .day-num { color: #e74c3c; }
+.cal-cell.saturday .day-num { color: #3498db; }
+.cal-cell.all-available { background: var(--green-light); border-color: var(--green); border-width: 2px; }
+.cal-cell.all-available .day-num { color: #176b3a; font-weight: 700; }
 
-  /* SCHEDULE VIEW */
-  .schedule-controls {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-    align-items: center;
-  }
-  .schedule-controls input[type="date"],
-  .schedule-controls select {
-    padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px;
-    background: var(--surface);
-    outline: none;
-    cursor: pointer;
-  }
-  .schedule-controls input[type="date"]:focus,
-  .schedule-controls select:focus { border-color: var(--amber); }
+.day-num { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 3px; line-height: 1; z-index: 1; }
 
-  /* CALENDAR GRID */
-  .cal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .cal-nav {
-    background: transparent;
-    border: 1px solid var(--border);
-    width: 34px; height: 34px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.12s;
-  }
-  .cal-nav:hover { border-color: var(--amber); background: var(--amber-light); }
-  .cal-month {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--navy);
-  }
-  .cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-  }
-  .cal-day-label {
-    text-align: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-    padding: 6px 0;
-    letter-spacing: 0.5px;
-  }
-  .cal-day-label:first-child { color: #e74c3c; }
-  .cal-day-label:last-child { color: #3498db; }
-  .cal-cell {
-    aspect-ratio: 1;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 5px 3px 3px;
-    cursor: pointer;
-    transition: border-color 0.12s, background 0.12s;
-    position: relative;
-    overflow: hidden;
-    min-height: 60px;
-  }
-  .cal-cell:hover { border-color: var(--amber); z-index: 1; }
-  .cal-cell.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
-  .cal-cell.today { border-color: var(--amber); }
-  .cal-cell.today .day-num { color: var(--amber-dark); font-weight: 700; }
-  .cal-cell.past { opacity: 0.45; }
-  .cal-cell.sunday .day-num { color: #e74c3c; }
-  .cal-cell.saturday .day-num { color: #3498db; }
-  .day-num { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 3px; z-index: 1; }
-  .vote-bars {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1;
-  }
-  .vote-bar {
-    height: 4px;
-    border-radius: 2px;
-    width: 0%;
-    transition: width 0.3s;
-  }
-  .vote-count-badge {
-    position: absolute;
-    bottom: 3px;
-    right: 3px;
-    font-size: 9px;
-    font-weight: 700;
-    color: var(--text-muted);
-  }
-  .cal-cell.all-available {
-    background: #f0faf5;
-    border-color: #27ae60;
-  }
-  .cal-cell.all-available .day-num { color: #1e7e34; }
+/* ── PIE / DONUT ring ── */
+.pie-wrap { position: relative; width: 36px; height: 36px; flex-shrink: 0; margin-top: 2px; }
+.pie-wrap svg { width: 100%; height: 100%; display: block; }
 
-  /* VOTE MODAL */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(13,27,42,0.55);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    width: 100%;
-    max-width: 420px;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .modal-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 4px;
-  }
-  .modal-date {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 20px;
-  }
-  .vote-member-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-  .vote-member-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all 0.15s;
-    user-select: none;
-  }
-  .vote-member-row.voted {
-    border-width: 2px;
-    background: var(--amber-light);
-  }
-  .vote-check {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-  .vote-member-row.voted .vote-check {
-    border-color: var(--amber);
-    background: var(--amber);
-    color: #fff;
-  }
-  .modal-actions { display: flex; gap: 10px; }
-  .modal-actions .btn-ghost { flex: 1; text-align: center; }
-  .modal-actions .btn-primary { flex: 1; text-align: center; }
+/* ── LEGEND ── */
+.legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
 
-  /* RESULTS VIEW */
-  .results-list { display: flex; flex-direction: column; gap: 10px; }
-  .result-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .result-item.top {
-    border-color: #27ae60;
-    border-width: 2px;
-    background: #f0faf5;
-  }
-  .result-rank {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text-muted);
-    min-width: 36px;
-    text-align: center;
-  }
-  .result-item.top .result-rank { color: #27ae60; }
-  .result-date-info { flex: 1; }
-  .result-date-str { font-weight: 700; font-size: 15px; }
-  .result-who { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-  .result-bar-wrap { width: 120px; }
-  .result-bar-track {
-    height: 8px;
-    background: #f0f0f0;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 3px;
-  }
-  .result-bar-fill { height: 100%; border-radius: 4px; background: var(--amber); transition: width 0.4s; }
-  .result-item.top .result-bar-fill { background: #27ae60; }
-  .result-pct { font-size: 12px; color: var(--text-secondary); text-align: right; }
+/* ── QUICK VOTE PANEL ── */
+.qv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; }
+.qv-item { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 10px; border: 1.5px solid transparent; }
 
-  /* LEGEND */
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+/* ── VOTE MODAL ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(13,27,42,.58); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius-lg); padding: 26px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+.modal-date { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+.vote-member-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.vote-member-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all .15s; user-select: none; }
+.vote-member-row.voted { border-width: 2px; background: var(--amber-light); }
+.vote-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all .15s; flex-shrink: 0; color: transparent; }
+.vote-member-row.voted .vote-check { color: #fff; }
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions button { flex: 1; }
 
-  /* SHARE SECTION */
-  .share-box {
-    background: var(--navy);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 16px;
-  }
-  .share-box input {
-    flex: 1;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #fff;
-    padding: 9px 12px;
-    border-radius: var(--radius);
-    font-size: 13px;
-    font-family: 'Noto Sans KR', sans-serif;
-    outline: none;
-  }
-  .share-copy-btn {
-    background: var(--amber);
-    color: var(--navy);
-    border: none;
-    padding: 9px 16px;
-    border-radius: var(--radius);
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s;
-  }
-  .share-copy-btn:hover { background: #e09000; }
+/* ── RESULTS ── */
+.results-list { display: flex; flex-direction: column; gap: 12px; }
+.result-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
+.result-item.top { border-color: var(--green); border-width: 2px; background: var(--green-light); }
+.result-rank { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--text-muted); min-width: 34px; text-align: center; }
+.result-item.top .result-rank { color: var(--green); }
+.result-date-info { flex: 1; }
+.result-date-str { font-weight: 700; font-size: 16px; }
+.result-who { font-size: 13px; color: var(--text-secondary); margin-top: 5px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.result-bar-wrap { width: 120px; flex-shrink: 0; }
+.result-bar-track { height: 8px; background: #eeece8; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+.result-bar-fill { height: 100%; border-radius: 4px; background: var(--amber); transition: width .4s; }
+.result-item.top .result-bar-fill { background: var(--green); }
+.result-pct { font-size: 12px; color: var(--text-secondary); text-align: right; }
 
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--navy);
-    color: #fff;
-    padding: 12px 22px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    opacity: 0;
-    transition: all 0.25s;
-    z-index: 999;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* ── SITE LINK COPY ── */
+.site-link-box { background: var(--navy); border-radius: var(--radius-lg); padding: 18px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.site-link-box input { flex: 1; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: #fff; padding: 9px 13px; border-radius: var(--radius); font-size: 13px; font-family: 'Noto Sans KR',sans-serif; outline: none; }
+.copy-btn { background: var(--amber); color: var(--navy); border: none; padding: 9px 16px; border-radius: var(--radius); font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; transition: background .15s; }
+.copy-btn:hover { background: #e09000; }
 
-  /* INFO BADGE */
-  .info-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--amber-light);
-    color: var(--amber-dark);
-    border: 1px solid #f0d08a;
-    border-radius: var(--radius);
-    padding: 8px 14px;
-    font-size: 13px;
-    margin-bottom: 16px;
-  }
+/* ── NOTICE ── */
+.notice-list { display: flex; flex-direction: column; gap: 13px; }
+.notice-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
+.notice-card.type-song { border-left: 4px solid #9b59b6; }
+.notice-card.type-notice { border-left: 4px solid #3498db; }
+.notice-card.pinned { border-left: 4px solid var(--amber); }
+.notice-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.notice-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; }
+.notice-type-badge { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.badge-song { background: #f3e8ff; color: #6c3483; }
+.badge-notice { background: #ebf5fb; color: #1a5276; }
+.badge-pin { background: var(--amber-light); color: var(--amber-dark); }
+.notice-title { font-weight: 700; font-size: 16px; }
+.notice-body { font-size: 14px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.notice-meta { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+.notice-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.notice-form { display: none; }
+.notice-form.open { display: block; }
+.radio-group { display: flex; gap: 16px; }
+.radio-label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+
+/* ── MEMBERS ── */
+.member-add-row { display: flex; gap: 10px; margin-bottom: 20px; }
+.members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; }
+.member-card {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-lg);
+  padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  transition: border-color .15s; position: relative;
+}
+.member-card:hover { border-color: #ccc; }
+.member-photo-wrap {
+  width: 90px; height: 90px; border-radius: 50%; overflow: hidden;
+  border: 3px solid transparent; flex-shrink: 0; position: relative; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.member-photo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.member-photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; }
+.photo-upload-btn {
+  position: absolute; inset: 0; background: rgba(0,0,0,.38); color: #fff;
+  display: none; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+  border-radius: 50%; cursor: pointer; text-align: center; line-height: 1.3;
+}
+.member-photo-wrap:hover .photo-upload-btn { display: flex; }
+.member-body { width: 100%; }
+.member-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; justify-content: center; }
+.member-name-display { font-weight: 700; font-size: 16px; }
+.member-name-input { font-family: 'Noto Sans KR',sans-serif; font-size: 15px; font-weight: 700; border: 1px solid var(--amber); border-radius: 6px; padding: 3px 8px; outline: none; width: 120px; text-align: center; }
+.edit-name-btn { font-size: 11px; color: var(--text-muted); background: none; border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; cursor: pointer; transition: all .12s; }
+.edit-name-btn:hover { border-color: var(--amber); color: var(--amber-dark); }
+.member-role-input { border: none; background: transparent; font-family: 'Noto Sans KR',sans-serif; font-size: 13px; color: var(--text-secondary); width: 100%; outline: none; border-bottom: 1px dashed var(--border); transition: border-color .15s; padding: 2px 4px; text-align: center; }
+.member-role-input:focus { border-bottom-color: var(--amber); }
+.member-role-input::placeholder { color: var(--text-muted); }
+
+/* instrument selector */
+.instrument-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+.instr-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 9px;
+  cursor: pointer; transition: all .15s; background: transparent; font-family: 'Noto Sans KR',sans-serif;
+}
+.instr-btn:hover { border-color: #aaa; }
+.instr-btn.selected { border-width: 2px; }
+.instr-icon { font-size: 20px; line-height: 1; }
+.instr-label { font-size: 10px; color: var(--text-secondary); font-weight: 500; }
+
+/* color swatches — 8 colors */
+.color-swatches { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+.color-swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2.5px solid transparent; transition: transform .12s; }
+.color-swatch:hover { transform: scale(1.25); }
+.color-swatch.selected { border-color: var(--navy); }
+
+.member-card-footer { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 4px; }
+.vote-info-pill { font-size: 12px; color: var(--text-muted); }
+
+/* info badge */
+.info-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--amber-light); color: var(--amber-dark); border: 1px solid #f0d08a; border-radius: var(--radius); padding: 8px 14px; font-size: 14px; margin-bottom: 16px; }
+
+/* toast */
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--navy); color: #fff; padding: 12px 22px; border-radius: var(--radius); font-size: 14px; opacity: 0; transition: all .25s; z-index: 999; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
 <header class="site-header">
-  <div class="logo">
-    <span class="logo-dot"></span>
-    밴드 스케줄러
-  </div>
-  <div class="header-actions">
-    <button class="tab-btn active" onclick="showView('members')">멤버</button>
-    <button class="tab-btn" onclick="showView('schedule')">투표</button>
-    <button class="tab-btn" onclick="showView('results')">결과</button>
-  </div>
+  <div class="logo"><span class="logo-dot"></span>차세대 밴드 스케줄러</div>
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="showView('schedule')">📅 투표</button>
+    <button class="tab-btn" onclick="showView('results')">📊 결과</button>
+    <button class="tab-btn" onclick="showView('notice')">📢 공지·곡</button>
+    <button class="tab-btn" onclick="showView('members')">👥 멤버</button>
+  </nav>
 </header>
 
 <main class="main">
 
-  <!-- MEMBERS VIEW -->
-  <div id="view-members" class="view active">
-    <div class="section-title">밴드 멤버</div>
-    <div class="section-sub">멤버를 추가하고 색상을 지정하세요</div>
-
-    <div class="card">
-      <div class="member-add-row">
-        <input type="text" id="new-member-name" placeholder="멤버 이름 입력" maxlength="20" onkeydown="if(event.key==='Enter')addMember()">
-        <button class="btn-primary" onclick="addMember()">추가</button>
-      </div>
-      <div id="members-list" class="members-list"></div>
+<!-- ══ 투표 뷰 ══ -->
+<div id="view-schedule" class="view active">
+  <div class="section-title">합주 날짜 투표</div>
+  <div class="section-sub">날짜를 클릭해 참여 가능 여부를 표시하세요</div>
+  <div id="schedule-member-warning" class="info-badge" style="display:none">⚠️ 먼저 멤버 탭에서 멤버를 추가해주세요</div>
+  <div class="card">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="changeMonth(-1)">←</button>
+      <div class="cal-month" id="cal-month-label"></div>
+      <button class="cal-nav" onclick="changeMonth(1)">→</button>
+    </div>
+    <div id="legend-container" class="legend"></div>
+    <div class="cal-grid" id="cal-grid">
+      <div class="cal-day-label">일</div><div class="cal-day-label">월</div>
+      <div class="cal-day-label">화</div><div class="cal-day-label">수</div>
+      <div class="cal-day-label">목</div><div class="cal-day-label">금</div>
+      <div class="cal-day-label">토</div>
     </div>
   </div>
+  <div class="card">
+    <div style="font-weight:700;font-size:16px;margin-bottom:12px;color:var(--navy)">멤버별 투표 현황</div>
+    <div id="quick-vote-member-list" class="qv-grid"></div>
+  </div>
+</div>
 
-  <!-- SCHEDULE VIEW -->
-  <div id="view-schedule" class="view">
-    <div class="section-title">합주 날짜 투표</div>
-    <div class="section-sub">달력에서 날짜를 클릭해 가능 여부를 표시하세요</div>
+<!-- ══ 결과 뷰 ══ -->
+<div id="view-results" class="view">
+  <div class="section-title">투표 결과</div>
+  <div class="section-sub">가능 인원이 많은 날짜 순으로 표시됩니다</div>
+  <div class="site-link-box">
+    <input type="text" id="site-link-input" readonly>
+    <button class="copy-btn" onclick="copySiteLink()">🔗 링크 복사</button>
+  </div>
+  <div id="results-list" class="results-list"></div>
+  <div id="results-empty" class="empty-state" style="display:none">
+    <div class="empty-icon">📅</div>
+    <div>아직 투표 데이터가 없어요</div>
+    <div style="margin-top:7px;font-size:14px">투표 탭에서 날짜를 선택해보세요</div>
+  </div>
+</div>
 
-    <div id="schedule-member-warning" class="info-badge" style="display:none">
-      ⚠️ 먼저 멤버를 추가해주세요
-    </div>
-
-    <div class="card" style="margin-bottom: 16px;">
-      <div class="cal-header">
-        <button class="cal-nav" onclick="changeMonth(-1)">←</button>
-        <div class="cal-month" id="cal-month-label"></div>
-        <button class="cal-nav" onclick="changeMonth(1)">→</button>
+<!-- ══ 공지·곡 뷰 ══ -->
+<div id="view-notice" class="view">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+    <div class="section-title">공지 및 합주곡</div>
+    <button class="btn-primary" onclick="toggleNoticeForm()" id="notice-form-toggle-btn">+ 추가</button>
+  </div>
+  <div class="section-sub">공지사항과 현재 연습 중인 곡 목록을 관리하세요</div>
+  <div class="card notice-form" id="notice-form">
+    <div style="font-weight:700;font-size:16px;margin-bottom:14px;color:var(--navy)" id="notice-form-title">새 항목 추가</div>
+    <div class="form-row">
+      <label class="form-label">유형</label>
+      <div class="radio-group">
+        <label class="radio-label"><input type="radio" name="notice-type" value="notice" checked onchange="onNoticeTypeChange()"> 📢 공지사항</label>
+        <label class="radio-label"><input type="radio" name="notice-type" value="song" onchange="onNoticeTypeChange()"> 🎵 합주곡</label>
       </div>
-
-      <div id="legend-container" class="legend"></div>
-
-      <div class="cal-grid" id="cal-grid">
-        <div class="cal-day-label">일</div>
-        <div class="cal-day-label">월</div>
-        <div class="cal-day-label">화</div>
-        <div class="cal-day-label">수</div>
-        <div class="cal-day-label">목</div>
-        <div class="cal-day-label">금</div>
-        <div class="cal-day-label">토</div>
+    </div>
+    <div class="form-row"><label class="form-label">제목</label><input type="text" class="form-input" id="notice-title-input" placeholder="제목을 입력하세요"></div>
+    <div id="song-extra" style="display:none">
+      <div class="form-row"><label class="form-label">아티스트 / 원곡</label><input type="text" class="form-input" id="notice-artist-input" placeholder="예: 넬, Coldplay..."></div>
+      <div class="form-row-inline">
+        <div><label class="form-label">키 (Key)</label><input type="text" class="form-input" id="notice-key-input" placeholder="예: C, Am"></div>
+        <div><label class="form-label">BPM</label><input type="number" class="form-input" id="notice-bpm-input" placeholder="예: 120"></div>
       </div>
     </div>
-
-    <div class="card">
-      <div style="font-weight:600; font-size:15px; margin-bottom:12px; color:var(--navy)">빠른 전체 투표</div>
-      <div id="quick-vote-member-list" style="display:flex; gap:8px; flex-wrap:wrap"></div>
+    <div class="form-row"><label class="form-label">내용</label><textarea class="form-input" id="notice-body-input" placeholder="내용을 입력하세요 (선택)"></textarea></div>
+    <div class="form-row" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="notice-pin-check" style="width:16px;height:16px;cursor:pointer">
+      <label for="notice-pin-check" style="font-size:14px;cursor:pointer">📌 상단 고정</label>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn-ghost" onclick="cancelNoticeForm()">취소</button>
+      <button class="btn-primary" onclick="saveNotice()" id="notice-save-btn">저장</button>
     </div>
   </div>
-
-  <!-- RESULTS VIEW -->
-  <div id="view-results" class="view">
-    <div class="section-title">투표 결과</div>
-    <div class="section-sub">가능 인원이 많은 날짜 순으로 표시됩니다</div>
-
-    <div class="share-box">
-      <input type="text" id="share-url" readonly value="">
-      <button class="share-copy-btn" onclick="copyShare()">링크 복사</button>
-    </div>
-
-    <div id="results-list" class="results-list"></div>
-    <div id="results-empty" class="empty-state" style="display:none">
-      <div class="empty-icon">📅</div>
-      <div>아직 투표 데이터가 없어요</div>
-      <div style="margin-top:6px; font-size:12px;">투표 탭에서 날짜를 선택해보세요</div>
-    </div>
+  <div id="notice-list" class="notice-list"></div>
+  <div id="notice-empty" class="empty-state" style="display:none">
+    <div class="empty-icon">📋</div><div>아직 등록된 항목이 없어요</div>
+    <div style="margin-top:7px;font-size:14px">추가 버튼으로 공지나 합주곡을 등록해보세요</div>
   </div>
+</div>
+
+<!-- ══ 멤버 뷰 ══ -->
+<div id="view-members" class="view">
+  <div class="section-title">밴드 멤버</div>
+  <div class="section-sub">멤버를 추가하고 사진·악기·역할·색상을 설정하세요 (최대 8명)</div>
+  <div class="card">
+    <div class="member-add-row">
+      <input type="text" class="form-input" id="new-member-name" placeholder="새 멤버 이름" maxlength="20" onkeydown="if(event.key==='Enter')addMember()">
+      <button class="btn-primary" onclick="addMember()">추가</button>
+    </div>
+    <div id="members-grid" class="members-grid"></div>
+  </div>
+</div>
+
 </main>
 
-<!-- VOTE MODAL -->
+<!-- 투표 모달 -->
 <div class="modal-overlay" id="vote-modal">
   <div class="modal">
-    <div class="modal-title" id="modal-title">날짜 선택</div>
-    <div class="modal-date" id="modal-date"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-date" id="modal-date">참여 가능한 멤버를 선택하세요</div>
     <div id="vote-member-list" class="vote-member-list"></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal()">취소</button>
@@ -615,356 +360,370 @@
   </div>
 </div>
 
+<!-- hidden file input -->
+<input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+
 <div class="toast" id="toast"></div>
 
 <script>
-const MEMBER_COLORS = [
-  '#E74C3C','#E67E22','#F1C40F','#2ECC71','#1ABC9C',
-  '#3498DB','#9B59B6','#E91E63','#FF5722','#00BCD4'
+// ── 8 DISTINCT COLORS ──
+const COLORS8 = ['#D62828','#F77F00','#1565C0','#2E7D32','#6A0DAD','#00838F','#C2185B','#E65100'];
+
+const INSTRUMENTS = [
+  { id:'vocal',    icon:'🎤', label:'보컬' },
+  { id:'keyboard', icon:'🎹', label:'키보드' },
+  { id:'bass',     icon:'🎸', label:'베이스' },
+  { id:'drum',     icon:'🥁', label:'드럼' },
+  { id:'guitar',   icon:'🎵', label:'기타' },
 ];
-const COLOR_NAMES = ['빨강','주황','노랑','초록','민트','파랑','보라','핑크','다홍','하늘'];
 
 let state = {
-  members: [],       // {id, name, role, color}
-  votes: {},         // { 'YYYY-MM-DD': [memberId, ...] }
+  members: [],
+  votes: {},
+  notices: [],
   currentYear: new Date().getFullYear(),
   currentMonth: new Date().getMonth(),
   modalDate: null,
   modalVotes: new Set(),
+  editingNoticeId: null,
+  pendingPhotoMemberId: null,
 };
 
+// ── PERSIST ──
 function loadState() {
   try {
-    const saved = localStorage.getItem('band-scheduler-v2');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      state.members = parsed.members || [];
-      state.votes = parsed.votes || {};
-    }
+    const s = localStorage.getItem('band-v4');
+    if (s) { const p = JSON.parse(s); state.members=p.members||[]; state.votes=p.votes||{}; state.notices=p.notices||[]; }
   } catch(e) {}
 }
+function saveState() { localStorage.setItem('band-v4', JSON.stringify({members:state.members,votes:state.votes,notices:state.notices})); }
+function generateId() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function hexToRgba(hex, a) { const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return `rgba(${r},${g},${b},${a})`; }
+function getInitials(n) { return String(n).slice(0,1).toUpperCase(); }
 
-function saveState() {
-  localStorage.setItem('band-scheduler-v2', JSON.stringify({
-    members: state.members,
-    votes: state.votes,
-  }));
-  updateShareUrl();
-}
-
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2,5);
-}
-
-// ===== VIEWS =====
+// ── VIEWS ──
 function showView(v) {
-  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById('view-' + v).classList.add('active');
-  const btns = document.querySelectorAll('.tab-btn');
-  const idx = ['members','schedule','results'].indexOf(v);
-  if(idx >= 0) btns[idx].classList.add('active');
-
-  if(v === 'schedule') renderCalendar();
-  if(v === 'results') renderResults();
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  ['schedule','results','notice','members'].forEach((n,i)=>{ if(n===v) document.querySelectorAll('.tab-btn')[i].classList.add('active'); });
+  if(v==='schedule') renderCalendar();
+  if(v==='results') renderResults();
+  if(v==='notice') renderNotices();
+  if(v==='members') renderMembers();
 }
 
-// ===== MEMBERS =====
+// ── MEMBERS ──
 function addMember() {
+  if (state.members.length >= 8) { showToast('멤버는 최대 8명까지 추가할 수 있어요'); return; }
   const input = document.getElementById('new-member-name');
-  const name = input.value.trim();
-  if (!name) return;
-  const usedColors = new Set(state.members.map(m => m.color));
-  const color = MEMBER_COLORS.find(c => !usedColors.has(c)) || MEMBER_COLORS[state.members.length % MEMBER_COLORS.length];
-  state.members.push({ id: generateId(), name, role: '', color });
+  const name = input.value.trim(); if (!name) return;
+  const usedColors = new Set(state.members.map(m=>m.color));
+  const color = COLORS8.find(c=>!usedColors.has(c)) || COLORS8[state.members.length%8];
+  state.members.push({ id:generateId(), name, role:'', color, instrument:'', photoUrl:'' });
   input.value = '';
-  saveState();
-  renderMembers();
-  showToast(`${name} 추가됨`);
+  saveState(); renderMembers(); showToast(`${name} 추가됨`);
 }
-
 function removeMember(id) {
-  state.members = state.members.filter(m => m.id !== id);
-  Object.keys(state.votes).forEach(date => {
-    state.votes[date] = state.votes[date].filter(mid => mid !== id);
-  });
-  saveState();
+  const m = state.members.find(m=>m.id===id);
+  if (!confirm(`'${m?.name}' 멤버를 삭제할까요?`)) return;
+  state.members = state.members.filter(m=>m.id!==id);
+  Object.keys(state.votes).forEach(d=>{ state.votes[d]=state.votes[d].filter(mid=>mid!==id); });
+  saveState(); renderMembers();
+}
+function setMemberColor(id, color) {
+  const m = state.members.find(m=>m.id===id); if(m){m.color=color;saveState();renderMembers();}
+}
+function updateRole(id, val) {
+  const m = state.members.find(m=>m.id===id); if(m){m.role=val;}
+}
+function setInstrument(id, instr) {
+  const m = state.members.find(m=>m.id===id);
+  if (!m) return;
+  m.instrument = (m.instrument === instr) ? '' : instr;
+  saveState(); renderMembers();
+}
+function startEditName(id) {
+  const m = state.members.find(m=>m.id===id); if(!m) return;
+  const row = document.querySelector(`.member-name-row[data-id="${id}"]`); if(!row) return;
+  row.innerHTML = `<input class="member-name-input" id="ne-${id}" value="${escHtml(m.name)}" maxlength="20"
+    onblur="finishEditName('${id}',this.value)"
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${escHtml(m.name)}';this.blur()}">`;
+  document.getElementById('ne-'+id)?.focus();
+}
+function finishEditName(id, val) {
+  const m = state.members.find(m=>m.id===id);
+  if (m && val.trim()) { m.name=val.trim(); saveState(); }
   renderMembers();
 }
-
-function setMemberColor(id, color) {
-  const m = state.members.find(m => m.id === id);
-  if (m) { m.color = color; saveState(); renderMembers(); }
+function triggerPhotoUpload(memberId) {
+  state.pendingPhotoMemberId = memberId;
+  document.getElementById('photo-file-input').click();
 }
-
-function updateRole(id, val) {
-  const m = state.members.find(m => m.id === id);
-  if (m) { m.role = val; saveState(); }
-}
-
-function getInitials(name) {
-  return name.slice(0,1).toUpperCase();
-}
-
-function hexToRgba(hex, a) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
+function handlePhotoUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const m = state.members.find(m=>m.id===state.pendingPhotoMemberId);
+    if (m) { m.photoUrl = ev.target.result; saveState(); renderMembers(); showToast('사진이 등록됐어요'); }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
 }
 
 function renderMembers() {
-  const list = document.getElementById('members-list');
+  const grid = document.getElementById('members-grid');
   if (!state.members.length) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🎸</div><div>아직 멤버가 없어요</div><div style="margin-top:6px;font-size:12px">이름을 입력하고 추가 버튼을 눌러보세요</div></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎸</div><div>아직 멤버가 없어요</div><div style="margin-top:7px;font-size:14px">이름을 입력하고 추가해보세요</div></div>`;
     return;
   }
-  list.innerHTML = state.members.map((m,i) => {
-    const swatches = MEMBER_COLORS.map((c,ci) =>
-      `<div class="color-swatch ${c===m.color?'selected':''}" style="background:${c}" title="${COLOR_NAMES[ci]}" onclick="setMemberColor('${m.id}','${c}')"></div>`
-    ).join('');
+  grid.innerHTML = state.members.map(m => {
+    const swatches = COLORS8.map(c=>`<div class="color-swatch ${c===m.color?'selected':''}" style="background:${c}" onclick="setMemberColor('${m.id}','${c}')"></div>`).join('');
+    const instrBtns = INSTRUMENTS.map(ins=>`
+      <button class="instr-btn ${m.instrument===ins.id?'selected':''}"
+        style="${m.instrument===ins.id?`border-color:${m.color};background:${hexToRgba(m.color,.1)};`:''}"
+        onclick="setInstrument('${m.id}','${ins.id}')">
+        <span class="instr-icon">${ins.icon}</span>
+        <span class="instr-label">${ins.label}</span>
+      </button>`).join('');
+    const photoContent = m.photoUrl
+      ? `<img src="${m.photoUrl}" alt="${escHtml(m.name)}">`
+      : `<div class="member-photo-placeholder" style="background:${hexToRgba(m.color,.15)};color:${m.color}">${getInitials(m.name)}</div>`;
+    const voteCount = Object.values(state.votes).filter(v=>v.includes(m.id)).length;
+    const instrLabel = INSTRUMENTS.find(i=>i.id===m.instrument);
     return `
-    <div class="member-item">
-      <div class="member-avatar" style="background:${hexToRgba(m.color,0.15)};color:${m.color}">${getInitials(m.name)}</div>
-      <div class="member-info">
-        <div class="member-name">${escHtml(m.name)}</div>
-        <input class="member-role-input" placeholder="역할 (예: 기타, 드럼...)" value="${escHtml(m.role)}" oninput="updateRole('${m.id}',this.value)" onblur="saveState()">
+    <div class="member-card" style="border-color:${m.color}33">
+      <div class="member-photo-wrap" style="border-color:${m.color}" onclick="triggerPhotoUpload('${m.id}')">
+        ${photoContent}
+        <div class="photo-upload-btn">📷<br>사진 변경</div>
       </div>
-      <div class="color-swatches">${swatches}</div>
-      <button class="btn-danger" onclick="removeMember('${m.id}')">삭제</button>
+      <div class="member-body">
+        <div class="member-name-row" data-id="${m.id}">
+          <span class="member-name-display">${escHtml(m.name)}</span>
+          <button class="edit-name-btn" onclick="startEditName('${m.id}')">수정</button>
+        </div>
+        ${instrLabel ? `<div style="text-align:center;font-size:14px;color:${m.color};font-weight:700;margin-bottom:4px">${instrLabel.icon} ${instrLabel.label}</div>` : ''}
+        <input class="member-role-input" placeholder="자유 메모 (예: 리더, 작편곡 담당...)"
+          value="${escHtml(m.role)}" oninput="updateRole('${m.id}',this.value)" onblur="saveState()">
+        <div class="instrument-row">${instrBtns}</div>
+        <div class="color-swatches" style="margin-top:10px">${swatches}</div>
+      </div>
+      <div class="member-card-footer">
+        <span class="vote-info-pill">투표 ${voteCount}일</span>
+        <button class="btn-danger" onclick="removeMember('${m.id}')">삭제</button>
+      </div>
     </div>`;
   }).join('');
 }
 
-// ===== CALENDAR =====
+// ── CALENDAR ──
 function changeMonth(dir) {
   state.currentMonth += dir;
-  if (state.currentMonth < 0) { state.currentMonth = 11; state.currentYear--; }
-  if (state.currentMonth > 11) { state.currentMonth = 0; state.currentYear++; }
+  if (state.currentMonth < 0) { state.currentMonth=11; state.currentYear--; }
+  if (state.currentMonth > 11) { state.currentMonth=0; state.currentYear++; }
   renderCalendar();
 }
+function dateKey(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 
-function dateKey(y, m, d) {
-  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+// Build SVG donut pie — each member occupies a fixed slice
+function buildPieSvg(votedIds, allMembers) {
+  const n = allMembers.length;
+  if (!n) return '';
+  const R = 16, r = 9, cx = 18, cy = 18;
+  const sliceAngle = (2 * Math.PI) / n;
+  let paths = '';
+  allMembers.forEach((mem, i) => {
+    const startAngle = i * sliceAngle - Math.PI / 2;
+    const endAngle = startAngle + sliceAngle;
+    const voted = votedIds.includes(mem.id);
+    const x1o = cx + R * Math.cos(startAngle), y1o = cy + R * Math.sin(startAngle);
+    const x2o = cx + R * Math.cos(endAngle),   y2o = cy + R * Math.sin(endAngle);
+    const x1i = cx + r * Math.cos(endAngle),   y1i = cy + r * Math.sin(endAngle);
+    const x2i = cx + r * Math.cos(startAngle), y2i = cy + r * Math.sin(startAngle);
+    const large = sliceAngle > Math.PI ? 1 : 0;
+    const d = `M ${x1o} ${y1o} A ${R} ${R} 0 ${large} 1 ${x2o} ${y2o} L ${x1i} ${y1i} A ${r} ${r} 0 ${large} 0 ${x2i} ${y2i} Z`;
+    paths += `<path d="${d}" fill="${voted ? mem.color : '#E8E4DC'}" stroke="#fff" stroke-width="1.5"/>`;
+  });
+  const allVoted = votedIds.length === n;
+  const countTxt = allVoted
+    ? `<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="9" font-weight="700" fill="#1e9e55">✓</text>`
+    : `<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="9" font-weight="700" fill="#777">${votedIds.length}/${n}</text>`;
+  return `<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">${paths}${countTxt}</svg>`;
 }
 
 function renderCalendar() {
-  const warning = document.getElementById('schedule-member-warning');
-  if (!state.members.length) { warning.style.display = 'flex'; } else { warning.style.display = 'none'; }
+  const warn = document.getElementById('schedule-member-warning');
+  warn.style.display = state.members.length ? 'none' : 'inline-flex';
 
   const y = state.currentYear, m = state.currentMonth;
   const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('cal-month-label').textContent = `${y}년 ${months[m]}`;
 
-  const firstDay = new Date(y, m, 1).getDay();
-  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const firstDay = new Date(y,m,1).getDay();
+  const daysInMonth = new Date(y,m+1,0).getDate();
   const today = new Date();
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
 
   const grid = document.getElementById('cal-grid');
-  const dayLabels = grid.querySelectorAll('.cal-day-label');
+  const labels = Array.from(grid.querySelectorAll('.cal-day-label'));
   grid.innerHTML = '';
-  dayLabels.forEach(l => grid.appendChild(l));
+  labels.forEach(l=>grid.appendChild(l));
 
-  // empty cells
-  for (let i = 0; i < firstDay; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cal-cell empty';
-    grid.appendChild(cell);
+  for (let i=0; i<firstDay; i++) {
+    const cell = document.createElement('div'); cell.className='cal-cell empty'; grid.appendChild(cell);
   }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const key = dateKey(y, m, d);
-    const dayOfWeek = (firstDay + d - 1) % 7;
+  for (let d=1; d<=daysInMonth; d++) {
+    const key = dateKey(y,m,d);
+    const dow = (firstDay+d-1)%7;
     const votes = state.votes[key] || [];
     const total = state.members.length;
-    const isPast = key < todayKey;
-    const isToday = key === todayKey;
-    const allAvailable = total > 0 && votes.length === total;
+    const allAvail = total > 0 && votes.length === total;
+    const isToday = key===todayKey;
+    const isPast = key<todayKey;
 
     let cls = 'cal-cell';
     if (isToday) cls += ' today';
     if (isPast) cls += ' past';
-    if (dayOfWeek === 0) cls += ' sunday';
-    if (dayOfWeek === 6) cls += ' saturday';
-    if (allAvailable) cls += ' all-available';
+    if (dow===0) cls += ' sunday';
+    if (dow===6) cls += ' saturday';
+    if (allAvail) cls += ' all-available';
 
     const cell = document.createElement('div');
     cell.className = cls;
     cell.onclick = () => openModal(key);
 
     const num = document.createElement('div');
-    num.className = 'day-num';
-    num.textContent = d;
+    num.className = 'day-num'; num.textContent = d;
     cell.appendChild(num);
 
-    if (votes.length && state.members.length) {
-      const bars = document.createElement('div');
-      bars.className = 'vote-bars';
-      votes.forEach(mid => {
-        const mem = state.members.find(m => m.id === mid);
-        if (!mem) return;
-        const bar = document.createElement('div');
-        bar.className = 'vote-bar';
-        bar.style.background = mem.color;
-        bar.style.width = '100%';
-        bars.appendChild(bar);
-      });
-      cell.appendChild(bars);
-
-      const badge = document.createElement('div');
-      badge.className = 'vote-count-badge';
-      badge.textContent = `${votes.length}/${total}`;
-      cell.appendChild(badge);
+    if (state.members.length > 0) {
+      const pieWrap = document.createElement('div');
+      pieWrap.className = 'pie-wrap';
+      pieWrap.innerHTML = buildPieSvg(votes, state.members);
+      cell.appendChild(pieWrap);
     }
-
     grid.appendChild(cell);
   }
 
   // Legend
   const legend = document.getElementById('legend-container');
-  if (state.members.length) {
-    legend.innerHTML = state.members.map(m =>
-      `<div class="legend-item"><div class="legend-dot" style="background:${m.color}"></div>${escHtml(m.name)}</div>`
-    ).join('') + `<div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div>전원 가능</div>`;
-  } else {
-    legend.innerHTML = '';
-  }
+  legend.innerHTML = state.members.map(m => {
+    const instr = INSTRUMENTS.find(i=>i.id===m.instrument);
+    return `<div class="legend-item">
+      <div class="legend-dot" style="background:${m.color}"></div>
+      ${escHtml(m.name)}${instr ? ` ${instr.icon}` : ''}${m.role ? ` <span style="color:var(--text-muted);font-size:12px">(${escHtml(m.role)})</span>` : ''}
+    </div>`;
+  }).join('');
 
   renderQuickVote();
 }
 
 function renderQuickVote() {
-  const container = document.getElementById('quick-vote-member-list');
+  const c = document.getElementById('quick-vote-member-list');
   if (!state.members.length) {
-    container.innerHTML = '<span style="font-size:13px;color:var(--text-muted)">멤버를 추가하면 빠른 투표가 가능해요</span>';
+    c.innerHTML = '<span style="font-size:14px;color:var(--text-muted)">멤버를 추가하면 현황이 표시돼요</span>';
     return;
   }
-  container.innerHTML = state.members.map(m => {
-    const voteCount = Object.values(state.votes).filter(v => v.includes(m.id)).length;
-    return `<button class="btn-ghost" style="border-color:${m.color};color:${m.color}" onclick="openMemberVoteSheet('${m.id}')">
-      ${escHtml(m.name)} <span style="font-size:11px;opacity:0.7">${voteCount}일</span>
-    </button>`;
+  c.innerHTML = state.members.map(m => {
+    const cnt = Object.values(state.votes).filter(v=>v.includes(m.id)).length;
+    const instr = INSTRUMENTS.find(i=>i.id===m.instrument);
+    return `<div class="qv-item" style="border-color:${m.color}44;background:${hexToRgba(m.color,.05)}">
+      <div style="width:10px;height:10px;border-radius:50%;background:${m.color};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.name)}${instr?' '+instr.icon:''}</div>
+        ${m.role?`<div style="font-size:12px;color:var(--text-muted)">${escHtml(m.role)}</div>`:''}
+      </div>
+      <span style="font-size:14px;color:${m.color};font-weight:700;flex-shrink:0">${cnt}일</span>
+    </div>`;
   }).join('');
 }
 
-// ===== MODAL =====
+// ── MODAL ──
 function openModal(key) {
   if (!state.members.length) { showToast('먼저 멤버를 추가해주세요'); return; }
   state.modalDate = key;
   state.modalVotes = new Set(state.votes[key] || []);
-
-  const [y, mo, d] = key.split('-');
-  const date = new Date(parseInt(y), parseInt(mo)-1, parseInt(d));
-  const days = ['일','월','화','수','목','금','토'];
+  const [y,mo,d] = key.split('-');
+  const date = new Date(parseInt(y),parseInt(mo)-1,parseInt(d));
+  const days=['일','월','화','수','목','금','토'];
   document.getElementById('modal-title').textContent = `${parseInt(mo)}월 ${parseInt(d)}일 (${days[date.getDay()]})`;
-  document.getElementById('modal-date').textContent = '참여 가능한 멤버를 선택하세요';
-
   const list = document.getElementById('vote-member-list');
   list.innerHTML = state.members.map(m => {
     const checked = state.modalVotes.has(m.id);
-    return `<div class="vote-member-row ${checked?'voted':''}" onclick="toggleVote('${m.id}',this)" style="${checked?`border-color:${m.color};`:''}">
-      <div class="vote-check" style="${checked?`background:${m.color};border-color:${m.color}`:''}">✓</div>
-      <div class="member-avatar" style="width:32px;height:32px;font-size:13px;background:${hexToRgba(m.color,0.15)};color:${m.color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${getInitials(m.name)}</div>
+    const instr = INSTRUMENTS.find(i=>i.id===m.instrument);
+    return `<div class="vote-member-row ${checked?'voted':''}" onclick="toggleVote('${m.id}',this)"
+        style="${checked?`border-color:${m.color};`:''}">
+      <div class="vote-check" style="${checked?`background:${m.color};border-color:${m.color}`:''}">${checked?'✓':''}</div>
+      <div style="width:34px;height:34px;border-radius:50%;background:${hexToRgba(m.color,.18)};color:${m.color};
+          font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${m.photoUrl ? `<img src="${m.photoUrl}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">` : getInitials(m.name)}
+      </div>
       <div>
-        <div style="font-weight:500;font-size:14px">${escHtml(m.name)}</div>
-        ${m.role ? `<div style="font-size:11px;color:var(--text-muted)">${escHtml(m.role)}</div>` : ''}
+        <div style="font-weight:700;font-size:15px">${escHtml(m.name)}${instr?' '+instr.icon:''}</div>
+        ${m.role?`<div style="font-size:12px;color:var(--text-muted)">${escHtml(m.role)}</div>`:''}
       </div>
     </div>`;
   }).join('');
-
   document.getElementById('vote-modal').classList.add('open');
 }
-
 function toggleVote(id, row) {
   if (state.modalVotes.has(id)) {
-    state.modalVotes.delete(id);
-    row.classList.remove('voted');
-    row.style.borderColor = '';
-    row.style.borderWidth = '';
-    const chk = row.querySelector('.vote-check');
-    chk.style.background = '';
-    chk.style.borderColor = '';
+    state.modalVotes.delete(id); row.classList.remove('voted');
+    row.style.borderColor=''; row.style.borderWidth='';
+    const chk=row.querySelector('.vote-check'); chk.style.background=''; chk.style.borderColor=''; chk.textContent='';
   } else {
     state.modalVotes.add(id);
-    const mem = state.members.find(m => m.id === id);
-    row.classList.add('voted');
-    row.style.borderColor = mem ? mem.color : '';
-    row.style.borderWidth = '2px';
-    const chk = row.querySelector('.vote-check');
-    if (mem) { chk.style.background = mem.color; chk.style.borderColor = mem.color; }
+    const mem=state.members.find(m=>m.id===id);
+    row.classList.add('voted'); row.style.borderColor=mem?.color||''; row.style.borderWidth='2px';
+    const chk=row.querySelector('.vote-check');
+    if(mem){chk.style.background=mem.color;chk.style.borderColor=mem.color;chk.textContent='✓';}
   }
 }
-
 function saveVote() {
   if (state.modalDate) {
-    if (state.modalVotes.size) {
-      state.votes[state.modalDate] = Array.from(state.modalVotes);
-    } else {
-      delete state.votes[state.modalDate];
-    }
-    saveState();
-    renderCalendar();
-    showToast('저장됨');
+    if (state.modalVotes.size) state.votes[state.modalDate]=Array.from(state.modalVotes);
+    else delete state.votes[state.modalDate];
+    saveState(); renderCalendar(); showToast('저장됨');
   }
   closeModal();
 }
+function closeModal() { document.getElementById('vote-modal').classList.remove('open'); state.modalDate=null; }
+document.getElementById('vote-modal').addEventListener('click', function(e){ if(e.target===this)closeModal(); });
 
-function closeModal() {
-  document.getElementById('vote-modal').classList.remove('open');
-  state.modalDate = null;
-}
-
-document.getElementById('vote-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-// ===== MEMBER VOTE SHEET =====
-function openMemberVoteSheet(memberId) {
-  showToast('달력에서 날짜를 클릭해 투표하세요');
-}
-
-// ===== RESULTS =====
+// ── RESULTS ──
 function renderResults() {
-  updateShareUrl();
+  const siteLink = `${location.origin}${location.pathname}`;
+  const el = document.getElementById('site-link-input');
+  if (el) el.value = siteLink;
+
   const list = document.getElementById('results-list');
   const empty = document.getElementById('results-empty');
   const total = state.members.length;
-
   const entries = Object.entries(state.votes)
-    .filter(([,v]) => v.length > 0)
-    .sort((a,b) => {
-      if (b[1].length !== a[1].length) return b[1].length - a[1].length;
-      return a[0] < b[0] ? -1 : 1;
-    });
-
-  if (!entries.length) {
-    list.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
-
-  const days = ['일','월','화','수','목','금','토'];
-
-  list.innerHTML = entries.slice(0, 20).map(([key, votes], i) => {
-    const [y, mo, d] = key.split('-');
-    const date = new Date(parseInt(y), parseInt(mo)-1, parseInt(d));
-    const dayStr = `${parseInt(y)}년 ${parseInt(mo)}월 ${parseInt(d)}일 (${days[date.getDay()]})`;
-    const pct = total ? Math.round(votes.length / total * 100) : 0;
-    const isTop = votes.length === total && total > 0;
-    const names = votes.map(id => state.members.find(m => m.id === id)?.name || '').filter(Boolean).join(', ');
-    const avatars = votes.map(id => {
-      const mem = state.members.find(m => m.id === id);
-      if (!mem) return '';
-      return `<div style="width:22px;height:22px;border-radius:50%;background:${hexToRgba(mem.color,0.2)};color:${mem.color};font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:2px">${getInitials(mem.name)}</div>`;
+    .filter(([,v])=>v.length>0)
+    .sort((a,b)=>b[1].length-a[1].length||(a[0]<b[0]?-1:1));
+  if (!entries.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const days=['일','월','화','수','목','금','토'];
+  list.innerHTML = entries.slice(0,20).map(([key,votes],i)=>{
+    const [y,mo,d]=key.split('-');
+    const date=new Date(parseInt(y),parseInt(mo)-1,parseInt(d));
+    const dayStr=`${parseInt(y)}년 ${parseInt(mo)}월 ${parseInt(d)}일 (${days[date.getDay()]})`;
+    const pct=total?Math.round(votes.length/total*100):0;
+    const isTop=votes.length===total&&total>0;
+    const avatars=votes.map(id=>{
+      const mem=state.members.find(m=>m.id===id); if(!mem)return'';
+      const inner=mem.photoUrl?`<img src="${mem.photoUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`:
+        `<span style="font-size:11px;font-weight:700;color:${mem.color}">${getInitials(mem.name)}</span>`;
+      return `<div style="width:26px;height:26px;border-radius:50%;background:${hexToRgba(mem.color,.15)};display:inline-flex;align-items:center;justify-content:center;border:2px solid ${mem.color}33">${inner}</div>`;
     }).join('');
-
+    const names=votes.map(id=>state.members.find(m=>m.id===id)?.name||'').filter(Boolean).join(', ');
     return `<div class="result-item ${isTop?'top':''}">
       <div class="result-rank">${i+1}</div>
       <div class="result-date-info">
         <div class="result-date-str">${dayStr}${isTop?' 🎵':''}</div>
-        <div class="result-who" style="display:flex;align-items:center;gap:4px;margin-top:5px">${avatars}<span style="margin-left:4px">${names}</span></div>
+        <div class="result-who">${avatars}<span style="margin-left:4px">${names}</span></div>
       </div>
       <div class="result-bar-wrap">
         <div class="result-bar-track"><div class="result-bar-fill" style="width:${pct}%"></div></div>
@@ -973,61 +732,119 @@ function renderResults() {
     </div>`;
   }).join('');
 }
-
-// ===== SHARE =====
-function updateShareUrl() {
-  const data = {
-    m: state.members.map(m => ({ i: m.id, n: m.name, r: m.role, c: m.color })),
-    v: state.votes,
-  };
-  try {
-    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
-    const url = `${location.origin}${location.pathname}?d=${encoded}`;
-    const el = document.getElementById('share-url');
-    if (el) el.value = url;
-  } catch(e) {}
-}
-
-function copyShare() {
-  const url = document.getElementById('share-url').value;
-  navigator.clipboard.writeText(url).then(() => showToast('링크가 복사됐어요!')).catch(() => {
-    document.getElementById('share-url').select();
-    document.execCommand('copy');
-    showToast('링크가 복사됐어요!');
+function copySiteLink() {
+  const url = document.getElementById('site-link-input').value;
+  navigator.clipboard.writeText(url).then(()=>showToast('사이트 링크가 복사됐어요!')).catch(()=>{
+    document.getElementById('site-link-input').select(); document.execCommand('copy'); showToast('사이트 링크가 복사됐어요!');
   });
 }
 
-function loadFromUrl() {
-  try {
-    const params = new URLSearchParams(location.search);
-    const d = params.get('d');
-    if (!d) return false;
-    const data = JSON.parse(decodeURIComponent(atob(d)));
-    if (data.m) state.members = data.m.map(m => ({ id: m.i, name: m.n, role: m.r || '', color: m.c }));
-    if (data.v) state.votes = data.v;
-    saveState();
-    return true;
-  } catch(e) { return false; }
+// ── NOTICES ──
+function onNoticeTypeChange() {
+  const type=document.querySelector('input[name="notice-type"]:checked')?.value;
+  document.getElementById('song-extra').style.display=type==='song'?'block':'none';
+}
+function toggleNoticeForm() {
+  const form=document.getElementById('notice-form');
+  if(form.classList.contains('open')){cancelNoticeForm();}
+  else{state.editingNoticeId=null;document.getElementById('notice-form-title').textContent='새 항목 추가';document.getElementById('notice-save-btn').textContent='저장';clearNoticeForm();form.classList.add('open');document.getElementById('notice-form-toggle-btn').textContent='✕ 닫기';}
+}
+function cancelNoticeForm() {
+  document.getElementById('notice-form').classList.remove('open');
+  document.getElementById('notice-form-toggle-btn').textContent='+ 추가';
+  state.editingNoticeId=null;
+}
+function clearNoticeForm() {
+  ['notice-title-input','notice-body-input','notice-artist-input','notice-key-input','notice-bpm-input'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('notice-pin-check').checked=false;
+  document.querySelector('input[name="notice-type"][value="notice"]').checked=true;
+  document.getElementById('song-extra').style.display='none';
+}
+function saveNotice() {
+  const title=document.getElementById('notice-title-input').value.trim();
+  if(!title){showToast('제목을 입력해주세요');return;}
+  const type=document.querySelector('input[name="notice-type"]:checked')?.value||'notice';
+  const body=document.getElementById('notice-body-input').value.trim();
+  const pinned=document.getElementById('notice-pin-check').checked;
+  const artist=document.getElementById('notice-artist-input').value.trim();
+  const key=document.getElementById('notice-key-input').value.trim();
+  const bpm=document.getElementById('notice-bpm-input').value.trim();
+  if(state.editingNoticeId){
+    const n=state.notices.find(n=>n.id===state.editingNoticeId);
+    if(n){Object.assign(n,{title,body,type,pinned,artist,key,bpm,updatedAt:Date.now()});}
+  } else {
+    state.notices.unshift({id:generateId(),type,title,body,pinned,artist,key,bpm,createdAt:Date.now()});
+  }
+  saveState(); cancelNoticeForm(); renderNotices(); showToast(state.editingNoticeId?'수정됐어요':'추가됐어요');
+}
+function editNotice(id) {
+  const n=state.notices.find(n=>n.id===id); if(!n)return;
+  state.editingNoticeId=id;
+  document.getElementById('notice-form-title').textContent='항목 수정';
+  document.getElementById('notice-save-btn').textContent='수정 저장';
+  document.getElementById('notice-title-input').value=n.title;
+  document.getElementById('notice-body-input').value=n.body||'';
+  document.getElementById('notice-artist-input').value=n.artist||'';
+  document.getElementById('notice-key-input').value=n.key||'';
+  document.getElementById('notice-bpm-input').value=n.bpm||'';
+  document.getElementById('notice-pin-check').checked=!!n.pinned;
+  document.querySelector(`input[name="notice-type"][value="${n.type}"]`).checked=true;
+  document.getElementById('song-extra').style.display=n.type==='song'?'block':'none';
+  document.getElementById('notice-form').classList.add('open');
+  document.getElementById('notice-form-toggle-btn').textContent='✕ 닫기';
+  document.getElementById('notice-form').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function deleteNotice(id) {
+  if(!confirm('삭제할까요?'))return;
+  state.notices=state.notices.filter(n=>n.id!==id); saveState(); renderNotices();
+}
+function togglePin(id) {
+  const n=state.notices.find(n=>n.id===id); if(n){n.pinned=!n.pinned;saveState();renderNotices();}
+}
+function renderNotices() {
+  const list=document.getElementById('notice-list'); const empty=document.getElementById('notice-empty');
+  if(!state.notices.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const sorted=[...state.notices].sort((a,b)=>{if(!!b.pinned!==!!a.pinned)return b.pinned?1:-1;return(b.updatedAt||b.createdAt)-(a.updatedAt||a.createdAt);});
+  const songs=sorted.filter(n=>n.type==='song'); const notices=sorted.filter(n=>n.type==='notice');
+  function noticeHtml(n){
+    const date=new Date(n.updatedAt||n.createdAt);
+    const ds=`${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}`;
+    const bCls=n.type==='song'?'badge-song':'badge-notice'; const bLbl=n.type==='song'?'🎵 합주곡':'📢 공지';
+    const cCls=`notice-card ${n.type==='song'?'type-song':'type-notice'}${n.pinned?' pinned':''}`;
+    let extra='';
+    if(n.type==='song'){const meta=[n.artist,n.key?`Key: ${n.key}`:'',n.bpm?`BPM: ${n.bpm}`:''].filter(Boolean).join(' · ');if(meta)extra=`<div style="font-size:13px;color:var(--text-secondary);margin-bottom:7px">${escHtml(meta)}</div>`;}
+    return `<div class="${cCls}">
+      <div class="notice-header">
+        <div class="notice-title-row">
+          ${n.pinned?'<span class="notice-type-badge badge-pin">📌 고정</span>':''}
+          <span class="notice-type-badge ${bCls}">${bLbl}</span>
+          <span class="notice-title">${escHtml(n.title)}</span>
+        </div>
+        <div class="notice-actions">
+          <button class="edit-name-btn" onclick="togglePin('${n.id}')">${n.pinned?'고정 해제':'📌'}</button>
+          <button class="edit-name-btn" onclick="editNotice('${n.id}')">수정</button>
+          <button class="btn-danger" onclick="deleteNotice('${n.id}')">삭제</button>
+        </div>
+      </div>
+      ${extra}
+      ${n.body?`<div class="notice-body">${escHtml(n.body)}</div>`:''}
+      <div class="notice-meta">${n.updatedAt?'수정':'등록'} ${ds}</div>
+    </div>`;
+  }
+  let html='';
+  if(notices.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin-bottom:9px">공지사항</div>`+notices.map(noticeHtml).join('');}
+  if(songs.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin:${notices.length?'20px':'4px'} 0 9px">합주곡 목록</div>`+songs.map(noticeHtml).join('');}
+  list.innerHTML=html;
 }
 
-// ===== TOAST =====
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
-}
+// ── TOAST ──
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ===== INIT =====
+// ── INIT ──
 loadState();
-if (loadFromUrl()) {
-  showToast('공유 링크로 데이터를 불러왔어요');
-}
 renderMembers();
+renderCalendar();
 </script>
 </body>
 </html>
