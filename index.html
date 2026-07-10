@@ -175,6 +175,27 @@ textarea.form-input { resize: vertical; min-height: 90px; line-height: 1.65; }
 .radio-group { display: flex; gap: 16px; }
 .radio-label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
 
+/* ── COMMENTS ── */
+.comment-section { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+.comment-toggle-btn { background: none; border: none; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 2px 0; display: flex; align-items: center; gap: 5px; transition: color .15s; }
+.comment-toggle-btn:hover { color: var(--amber-dark); }
+.comment-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.comment-item { display: flex; gap: 9px; align-items: flex-start; }
+.comment-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.comment-bubble { flex: 1; background: var(--off-white); border-radius: 0 10px 10px 10px; padding: 8px 11px; position: relative; }
+.comment-author { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+.comment-text { font-size: 13px; color: var(--text-secondary); line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+.comment-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.comment-del-btn { position: absolute; top: 6px; right: 8px; background: none; border: none; font-size: 11px; color: #ccc; cursor: pointer; line-height: 1; padding: 1px 3px; border-radius: 3px; }
+.comment-del-btn:hover { color: #e74c3c; background: #fef0f0; }
+.comment-input-row { display: flex; gap: 8px; margin-top: 10px; align-items: flex-end; }
+.comment-author-select { font-family: inherit; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 10px; background: var(--surface); color: var(--text-primary); outline: none; flex-shrink: 0; max-width: 110px; cursor: pointer; }
+.comment-author-select:focus { border-color: var(--amber); }
+.comment-input { flex: 1; font-family: inherit; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 11px; outline: none; resize: none; line-height: 1.5; min-height: 36px; max-height: 100px; overflow-y: auto; }
+.comment-input:focus { border-color: var(--amber); }
+.comment-submit-btn { background: var(--amber); color: var(--navy); border: none; border-radius: var(--radius); padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background .15s; }
+.comment-submit-btn:hover { background: var(--amber-dark); color: #fff; }
+
 /* ── MEMBERS ── */
 .member-add-row { display: flex; gap: 10px; margin-bottom: 20px; }
 .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; }
@@ -888,6 +909,41 @@ function deleteNotice(id) {
 function togglePin(id) {
   const n=state.notices.find(n=>n.id===id); if(n){n.pinned=!n.pinned;saveState();renderNotices();}
 }
+// ── COMMENTS ──
+function addComment(noticeId) {
+  const authorEl = document.getElementById(`cmt-author-${noticeId}`);
+  const textEl   = document.getElementById(`cmt-text-${noticeId}`);
+  const author = authorEl.value.trim();
+  const text   = textEl.value.trim();
+  if (!author) { showToast('이름을 선택하거나 입력해주세요'); authorEl.focus(); return; }
+  if (!text)   { showToast('댓글을 입력해주세요'); textEl.focus(); return; }
+  const n = state.notices.find(n=>n.id===noticeId); if(!n) return;
+  if (!n.comments) n.comments = [];
+  n.comments.push({ id: generateId(), author, text, createdAt: Date.now() });
+  textEl.value = '';
+  saveState();
+  renderNotices();
+  // 풀린 상태 유지
+  setTimeout(() => {
+    const sec = document.getElementById(`cmt-section-${noticeId}`);
+    if (sec) sec.style.display = 'block';
+  }, 10);
+}
+function deleteComment(noticeId, commentId) {
+  const n = state.notices.find(n=>n.id===noticeId); if(!n) return;
+  n.comments = (n.comments||[]).filter(c=>c.id!==commentId);
+  saveState(); renderNotices();
+  setTimeout(() => {
+    const sec = document.getElementById(`cmt-section-${noticeId}`);
+    if (sec) sec.style.display = 'block';
+  }, 10);
+}
+function toggleComments(noticeId) {
+  const sec = document.getElementById(`cmt-section-${noticeId}`);
+  if (!sec) return;
+  const isOpen = sec.style.display !== 'none';
+  sec.style.display = isOpen ? 'none' : 'block';
+}
 function renderNotices() {
   const list=document.getElementById('notice-list'); const empty=document.getElementById('notice-empty');
   if(!state.notices.length){list.innerHTML='';empty.style.display='block';return;}
@@ -901,6 +957,26 @@ function renderNotices() {
     const cCls=`notice-card ${n.type==='song'?'type-song':'type-notice'}${n.pinned?' pinned':''}`;
     let extra='';
     if(n.type==='song'){const meta=[n.artist,n.key?`Key: ${n.key}`:'',n.bpm?`BPM: ${n.bpm}`:''].filter(Boolean).join(' · ');if(meta)extra=`<div style="font-size:13px;color:var(--text-secondary);margin-bottom:7px">${escHtml(meta)}</div>`;}
+    // 댓글 데이터
+    const comments = n.comments||[];
+    const cmtCount = comments.length;
+    // 댓글 목록 HTML
+    const memberOptions = state.members.map(m=>`<option value="${escHtml(m.name)}">${escHtml(m.name)}</option>`).join('');
+    const cmtListHtml = comments.map(c=>{
+      const t=new Date(c.createdAt);
+      const ts=`${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+      const mem=state.members.find(m=>m.name===c.author);
+      const avatarStyle=mem?`background:${hexToRgba(mem.color,.18)};color:${mem.color}`:'background:#eee;color:#888';
+      return `<div class="comment-item">
+        <div class="comment-avatar" style="${avatarStyle}">${getInitials(c.author)}</div>
+        <div class="comment-bubble">
+          <div class="comment-author">${escHtml(c.author)}</div>
+          <div class="comment-text">${escHtml(c.text)}</div>
+          <div class="comment-time">${ts}</div>
+          <button class="comment-del-btn" onclick="deleteComment('${n.id}','${c.id}')" title="삭제">✕</button>
+        </div>
+      </div>`;
+    }).join('');
     return `<div class="${cCls}">
       <div class="notice-header">
         <div class="notice-title-row">
@@ -917,12 +993,41 @@ function renderNotices() {
       ${extra}
       ${n.body?`<div class="notice-body">${escHtml(n.body)}</div>`:''}
       <div class="notice-meta">${n.updatedAt?'수정':'등록'} ${ds}</div>
+      <div class="comment-section">
+        <button class="comment-toggle-btn" onclick="toggleComments('${n.id}')">
+          💬 댓글 ${cmtCount > 0 ? `<span style="color:var(--amber-dark);font-weight:700">${cmtCount}</span>` : ''} ${cmtCount>0?'':'(없음)'} &nbsp;${cmtCount>0?'▾':'▸'}
+        </button>
+        <div id="cmt-section-${n.id}" style="display:none">
+          ${cmtListHtml ? `<div class="comment-list">${cmtListHtml}</div>` : '<div style="font-size:13px;color:var(--text-muted);padding:8px 0">첫 댓글을 달아보세요</div>'}
+          <div class="comment-input-row">
+            <select class="comment-author-select" id="cmt-author-${n.id}">
+              <option value="">이름 선택</option>
+              ${memberOptions}
+              <option value="__custom__">직접 입력...</option>
+            </select>
+            <textarea class="comment-input" id="cmt-text-${n.id}" placeholder="댓글을 입력하세요" rows="1"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addComment('${n.id}');}"
+              oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+            <button class="comment-submit-btn" onclick="addComment('${n.id}')">등록</button>
+          </div>
+        </div>
+      </div>
     </div>`;
   }
   let html='';
   if(notices.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin-bottom:9px">공지사항</div>`+notices.map(noticeHtml).join('');}
   if(songs.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin:${notices.length?'20px':'4px'} 0 9px">합주곡 목록</div>`+songs.map(noticeHtml).join('');}
   list.innerHTML=html;
+  // 이름 선택 시 직접 입력 전환
+  document.querySelectorAll('.comment-author-select').forEach(sel=>{
+    sel.addEventListener('change', function(){
+      if(this.value==='__custom__'){
+        const custom=prompt('이름을 입력하세요');
+        if(custom&&custom.trim()) this.value=custom.trim();
+        else this.value='';
+      }
+    });
+  });
 }
 
 // ── TOAST ──
